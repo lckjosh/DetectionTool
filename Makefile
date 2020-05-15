@@ -1,5 +1,5 @@
 ifneq ($(KERNELRELEASE),)
-	obj-m := detectortool.o
+	obj-m := detectiontool.o
 
 else
 	KERNELDIR ?=/lib/modules/$(shell uname -r)/build
