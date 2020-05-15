@@ -28,5 +28,3 @@
                         [-f] detect hidden files"
 
 #define OPTS_STR "+:p:f"
-
-// test 
