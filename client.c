@@ -7,7 +7,7 @@
 #include <math.h>
 
 // client program for detection tool
-
+// adapted from LilyOfTheValley rootkit
 
 // Usage:
 // ./client [-p] [-f]
