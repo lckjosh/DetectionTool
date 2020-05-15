@@ -4,3 +4,5 @@
 Module.symvers
 modules.order
 *.mod.*
+*.cmd
+*.mod
