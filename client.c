@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <math.h>
+#include "detectpids.c"
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
@@ -29,42 +30,47 @@
 #define OPTS_STR "pf"
 
 #define __err(msg, prnt_func, err_code) \
-    do                                  \
-    {                                   \
-        prnt_func(msg);                 \
-        return err_code;                \
-    } while (0)
+   do                                   \
+   {                                    \
+      prnt_func(msg);                   \
+      return err_code;                  \
+   } while (0)
 
-#define usage_err() \
-    do                         \
-    {                          \
-        printf(usage_err_msg); \
-        return -1;             \
-    } while (0)
+#define usage_err()          \
+   do                        \
+   {                         \
+      printf(usage_err_msg); \
+      return -1;             \
+   } while (0)
 
 int main(int argc, char **argv)
 {
-    int opt, fd;
-    fd = open(PROCFS_ENTRYNAME, O_RDWR);
+   int opt, fd;
+   fd = open(PROCFS_ENTRYNAME, O_RDWR);
 
-    if (fd < 0)
-        __err("[__ERROR_1__]", perror, -1);
+   if (fd < 0)
+      __err("[__ERROR_1__]", perror, -1);
 
-    while ((opt = getopt(argc, argv, OPTS_STR)) != -1)
-    {
-        switch (opt)
-        {
-        case 'p':
-            // detect hidden pids
-            break;
-        case 'f':
-            // detect hidden files
-            break;
-        case '?':
-            usage_err();
-            break;
-        case ':':
-            usage_err();
-        }
-    }
+   while ((opt = getopt(argc, argv, OPTS_STR)) != -1)
+   {
+      switch (opt)
+      {
+      case 'p':
+         if (getuid() != 0)
+         {
+            printf("You must be root to perform this function!\n");
+            exit(1);
+         }
+         checkallquick();
+         break;
+      case 'f':
+         // detect hidden files
+         break;
+      case '?':
+         usage_err();
+         break;
+      case ':':
+         usage_err();
+      }
+   }
 }
