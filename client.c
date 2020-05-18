@@ -5,6 +5,26 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <math.h>
+// Needed for unistd.h to declare getpgid() and others
+#define _XOPEN_SOURCE 500
+
+// Needed for sched.h to declare sched_getaffinity()
+#define _GNU_SOURCE
+
+#include <sys/stat.h>
+#include <wait.h>
+#include <sys/resource.h>
+#include <errno.h>
+#include <dirent.h>
+#include <sched.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/sysinfo.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <sys/syscall.h>
+#include <ctype.h>
+#include <time.h>
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
