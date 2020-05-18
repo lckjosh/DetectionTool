@@ -22,9 +22,9 @@
 
 #define BUF_SIZE 16
 
-#define usage_err_msg "[Usage] ./client [-p] [-f]\n \
-                        [-p] detect hidden PIDs\n \
-                        [-f] detect hidden files"
+#define usage_err_msg "[Usage] ./client [-p] [-f]\n	\
+[-p] detect hidden PIDs\n	\
+[-f] detect hidden files\n"
 
 #define OPTS_STR "+:p:f"
 
@@ -62,10 +62,10 @@ int main(int argc, char **argv)
             // detect hidden files
             break;
         case '?':
-            usage_err("[__ERROR__]unrecognized option [%c]\n", opt);
+            usage_err("[__ERROR__]unrecognized option [%c]\n", optopt);
             break;
         case ':':
-            usage_err("[__ERROR__]missing argument to [%c] option\n", opt);
+            usage_err("[__ERROR__]missing argument to [%c] option\n", optopt);
         }
     }
 }
