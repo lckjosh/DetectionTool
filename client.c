@@ -26,7 +26,7 @@
 [-p] detect hidden PIDs\n	\
 [-f] detect hidden files\n"
 
-#define OPTS_STR "+:p:f"
+#define OPTS_STR "pf"
 
 #define __err(msg, prnt_func, err_code) \
     do                                  \
@@ -35,10 +35,9 @@
         return err_code;                \
     } while (0)
 
-#define usage_err(errmsg, opt) \
+#define usage_err() \
     do                         \
     {                          \
-        printf(errmsg, opt);   \
         printf(usage_err_msg); \
         return -1;             \
     } while (0)
@@ -62,10 +61,10 @@ int main(int argc, char **argv)
             // detect hidden files
             break;
         case '?':
-            usage_err("[__ERROR__]unrecognized option [%c]\n", optopt);
+            usage_err();
             break;
         case ':':
-            usage_err("[__ERROR__]missing argument to [%c] option\n", optopt);
+            usage_err();
         }
     }
 }
