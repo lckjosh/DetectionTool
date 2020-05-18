@@ -20,8 +20,9 @@ gcc client.c -o client
 # Usage
 ```
 sudo insmod detectiontool.ko
-./client [-p] [-f]
-```
-[-p] detect hidden PIDs
+./client [option]
 
+Options:
+[-p] detect hidden PIDs
 [-f] detect hidden files
+```
