@@ -6,3 +6,4 @@ modules.order
 *.mod.*
 *.cmd
 *.mod
+client
