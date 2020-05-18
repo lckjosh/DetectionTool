@@ -64,7 +64,7 @@ static struct file_operations tool_procfs_fops =
 };
 
 
-// create a proc filesystem entry for the rootkit
+// create a proc filesystem entry for the detection tool
 static int tool_procfs_entry_init(void)
 {
 	tool_procfs_entry = proc_create(TOOL_PROCFS_ENTRYNAME,
