@@ -7,8 +7,8 @@ Master branch should only contain fully working code. Create feature branch to w
 This is a simple rootkit detection tool for Linux that has been tested on Ubuntu 16.04 (4.15.0-45-generic). 
 
 # Features
-Detect Hidden PIDs
-Detect Hidden Files
+- Detect Hidden PIDs
+- Detect Hidden Files
 
 # Installation
 ```
@@ -20,8 +20,9 @@ gcc client.c -o client
 # Usage
 ```
 sudo insmod detectiontool.ko
-./client [-p] [-f]
-```
-[-p] detect hidden PIDs
+./client [option]
 
+Options:
+[-p] detect hidden PIDs
 [-f] detect hidden files
+```
