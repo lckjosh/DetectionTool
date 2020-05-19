@@ -352,7 +352,7 @@ void printbadpid(int tmppid)
          }
          else
          {
-            printf("\t$USER=<undefined>", cmdcont);
+            printf("\t$USER=%s", cmdcont);
          }
          pclose(fich_tmp);
 
@@ -371,7 +371,7 @@ void printbadpid(int tmppid)
          }
          else
          {
-            printf("\t$PWD=<undefined>", cmdcont);
+            printf("\t$PWD=%s", cmdcont);
          }
          pclose(fich_tmp);
 
@@ -402,7 +402,7 @@ void checkallquick(void)
    char curdir[PATH_MAX];
    DIR *dir_fd;
 
-   printf("Searching for Hidden processes through  comparison of results of system calls, proc, dir and ps\n");
+   printf("Searching for hidden processes through the comparison of the results of system calls, proc, dir and ps\n");
 
    // get the path where Unhide is ran from.
    if (NULL == (pathpt = getcwd(curdir, PATH_MAX)))

@@ -27,6 +27,12 @@
 [-p] detect hidden PIDs\n	\
 [-f] detect hidden files\n"
 
+#define hidden_proc_found_msg "There are hidden processes found on your system.\n\
+There may be a rootkit installed on your system that is hiding these processes.\n"
+
+#define hidden_proc_notfound_msg "There are no hidden processes found on your system.\n\
+A rootkit may still be present on your system but is not hiding any process at the moment.\n"
+
 #define OPTS_STR "pf"
 
 #define __err(msg, prnt_func, err_code) \
@@ -62,6 +68,10 @@ int main(int argc, char **argv)
             exit(1);
          }
          checkallquick();
+         if (found_HP)
+            printf(hidden_proc_found_msg);
+         else
+            printf(hidden_proc_notfound_msg);
          break;
       case 'f':
          // detect hidden files
