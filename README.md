@@ -10,8 +10,8 @@ This is a simple rootkit detection tool for Linux that has been tested on Ubuntu
 
 # Installation
 ```
-git clone https://github.com/lckjosh/CSITIntern.git
-cd CSITIntern
+git clone https://github.com/lckjosh/DetectionTool.git
+cd DetectionTool
 make
 gcc client.c -o client
 ```
