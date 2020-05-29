@@ -7,6 +7,7 @@ This is a simple rootkit detection tool for Linux that has been tested on Ubuntu
 # Features
 - Detect Hidden PIDs
 - Detect Hidden Files
+- Detect Hooked System Call Table
 
 # Installation
 ```
@@ -23,4 +24,5 @@ sudo insmod detectiontool.ko
 Options:
 [-p] detect hidden PIDs
 [-f] detect hidden files
+[-s] detect hooked system calls
 ```
