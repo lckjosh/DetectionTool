@@ -115,6 +115,7 @@ static ssize_t tool_procfs_read(struct file *fp,
 								size_t count,
 								loff_t *offset)
 {
+
 	const char tools_cmds[] =
 		"#######################\n"
 		"Detection Tool Commands\n"
@@ -154,19 +155,26 @@ static unsigned int get_size_syscalls_table(void)
 static void check_diff_handler(void)
 {
 	unsigned int sys_num = 0;
-
+	int no_of_hooks = 0;
+	printk(KERN_INFO "hook_detection: Scanning syscalls...\n");
 	while (addr_syscall_table[sys_num])
 	{
 		if (addr_syscall_table[sys_num] != dump_syscall_table[sys_num])
 		{
 			printk(KERN_INFO "hook_detection: Hook detected ! (syscall %d)\n", sys_num);
-		}
-		else
-		{
-			printk(KERN_INFO "hook_detection: not hooked !");
+			no_of_hooks++;
 		}
 		sys_num++;
 	}
+	if (no_of_hooks)
+	{
+		printk(KERN_INFO "hook_detection: %d hooked system calls detected!\n", no_of_hooks);
+	}
+	else
+	{
+		printk(KERN_INFO "hook_detection: No hooked system calls detected.\n");
+	}
+	printk(KERN_INFO "hook_detection: Scanning complete.\n");
 }
 
 static int tool_init(void)
@@ -190,7 +198,7 @@ static int tool_init(void)
 	}
 	memcpy(dump_syscall_table, addr_syscall_table, syscall_table_size);
 
-	printk(KERN_INFO "hook_detection: Init OK\n");
+	printk(KERN_INFO "detection tool: Init OK\n");
 
 	return 0;
 }
@@ -199,7 +207,7 @@ static void tool_exit(void)
 {
 	remove_proc_entry(TOOL_PROCFS_ENTRYNAME, procfs_root);
 	kfree(dump_syscall_table);
-	printk(KERN_INFO "hook_detection: Exit\n");
+	printk(KERN_INFO "detection tool: Exiting\n");
 }
 
 module_init(tool_init);
