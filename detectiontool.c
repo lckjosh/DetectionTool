@@ -10,6 +10,7 @@
 #include <linux/uaccess.h>
 #include <linux/cred.h>
 #include <linux/version.h>
+#include <linux/syscalls.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Joshua Lim, Fai Yew");
@@ -22,6 +23,12 @@ MODULE_AUTHOR("Joshua Lim, Fai Yew");
 // commands
 #define DETECTPID_CMD "detectpid"
 #define DETECTFILE_CMD "detectfile"
+#define DETECTHOOKS_CMD "detecthooks"
+
+// declarations
+static unsigned int syscall_table_size;
+static unsigned long *addr_syscall_table;
+static unsigned long *dump_syscall_table;
 
 //for 4.X
 //copied from /fs/proc/internal.h
@@ -53,7 +60,7 @@ struct proc_dir_entry
 static int tool_procfs_entry_init(void);
 static ssize_t tool_procfs_write(struct file *, const char __user *, size_t, loff_t *);
 static ssize_t tool_procfs_read(struct file *, char __user *, size_t, loff_t *);
-
+static void check_diff_handler(void);
 static struct proc_dir_entry *tool_procfs_entry, *procfs_root;
 
 // handlers for the read and write operations from/to tool's
@@ -94,6 +101,12 @@ static ssize_t tool_procfs_write(struct file *fp,
 		// detect hidden files
 	}
 
+	else if (strcmp(buf, DETECTHOOKS_CMD) == 0)
+	{
+		// detect hooked system calls
+		check_diff_handler();
+	}
+
 	return count;
 }
 
@@ -102,12 +115,14 @@ static ssize_t tool_procfs_read(struct file *fp,
 								size_t count,
 								loff_t *offset)
 {
+
 	const char tools_cmds[] =
 		"#######################\n"
 		"Detection Tool Commands\n"
 		"#######################\n\n"
 		"\t* [-p] -->> to detect hidden PIDs on the system\n"
 		"\t* [-f] -->> to detect hidden files on the system\n"
+		"\t* [-s] -->> to detect hooked system calls\n"
 		"\x00";
 
 	if (copy_to_user(buf, tools_cmds, strlen(tools_cmds)))
@@ -120,10 +135,70 @@ static ssize_t tool_procfs_read(struct file *fp,
 	return (ssize_t)strlen(tools_cmds);
 }
 
+// detect hooked system call table
+static unsigned long *get_syscalls_table(void)
+{
+	unsigned long *syscall_table;
+	syscall_table = (unsigned long *)kallsyms_lookup_name("sys_call_table");
+	return syscall_table;
+}
+
+static unsigned int get_size_syscalls_table(void)
+{
+	unsigned int size = 0;
+
+	while (addr_syscall_table[size++])
+		;
+	return size * sizeof(unsigned long *);
+}
+
+static void check_diff_handler(void)
+{
+	unsigned int sys_num = 0;
+	int no_of_hooks = 0;
+	printk(KERN_INFO "hook_detection: Scanning syscalls...\n");
+	while (addr_syscall_table[sys_num])
+	{
+		if (addr_syscall_table[sys_num] != dump_syscall_table[sys_num])
+		{
+			printk(KERN_INFO "hook_detection: Hook detected ! (syscall %d)\n", sys_num);
+			no_of_hooks++;
+		}
+		sys_num++;
+	}
+	if (no_of_hooks)
+	{
+		printk(KERN_INFO "hook_detection: %d hooked system calls detected!\n", no_of_hooks);
+	}
+	else
+	{
+		printk(KERN_INFO "hook_detection: No hooked system calls detected.\n");
+	}
+	printk(KERN_INFO "hook_detection: Scanning complete.\n");
+}
+
 static int tool_init(void)
 {
 	if (!tool_procfs_entry_init())
 		return -1;
+
+	addr_syscall_table = get_syscalls_table();
+	if (!addr_syscall_table)
+	{
+		printk(KERN_INFO "hook_detection: Failed - Address of syscalls table not found\n");
+		return -ECANCELED;
+	}
+
+	syscall_table_size = get_size_syscalls_table();
+	dump_syscall_table = kmalloc(syscall_table_size, GFP_KERNEL);
+	if (!dump_syscall_table)
+	{
+		printk(KERN_INFO "hook_detection: Failed - Not enough memory\n");
+		return -ENOMEM;
+	}
+	memcpy(dump_syscall_table, addr_syscall_table, syscall_table_size);
+
+	printk(KERN_INFO "detection tool: Init OK\n");
 
 	return 0;
 }
@@ -131,6 +206,8 @@ static int tool_init(void)
 static void tool_exit(void)
 {
 	remove_proc_entry(TOOL_PROCFS_ENTRYNAME, procfs_root);
+	kfree(dump_syscall_table);
+	printk(KERN_INFO "detection tool: Exiting\n");
 }
 
 module_init(tool_init);
