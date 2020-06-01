@@ -11,6 +11,7 @@
 #include <linux/cred.h>
 #include <linux/version.h>
 #include <linux/syscalls.h>
+#include <asm/asm-offsets.h> /* NR_syscalls */
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Joshua Lim, Fai Yew");
@@ -155,16 +156,34 @@ static unsigned int get_size_syscalls_table(void)
 static void check_diff_handler(void)
 {
 	unsigned int sys_num = 0;
+	unsigned long addr;
+	unsigned char test[12];
 	int no_of_hooks = 0;
+
 	printk(KERN_INFO "hook_detection: Scanning syscalls...\n");
-	while (addr_syscall_table[sys_num])
+	for (sys_num = 0; sys_num < NR_syscalls; sys_num++)
 	{
 		if (addr_syscall_table[sys_num] != dump_syscall_table[sys_num])
 		{
 			printk(KERN_INFO "hook_detection: Hook detected ! (syscall %d)\n", sys_num);
 			no_of_hooks++;
 		}
-		sys_num++;
+		else
+		{
+			addr = addr_syscall_table[sys_num];
+			memcpy(test, (void *)addr, 12);
+			if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)
+			{
+				printk(KERN_INFO "hook_detection: Hook detected ! (syscall %d)\n", sys_num);
+
+				no_of_hooks++;
+			}
+			// int j;
+			// for (j = 0; j < 12; j++)
+			// {
+			// 	printk(KERN_INFO "test: %x\n", test[j]);
+			// }
+		}
 	}
 	if (no_of_hooks)
 	{
