@@ -27,7 +27,7 @@
 #define usage_err_msg "[Usage] ./client [-p] [-f]\n	\
 [-p] detect hidden PIDs\n	\
 [-f] detect hidden files\n	\
-[-s] detect hooked system calls\n"
+[-s] detect hooked functions\n"
 
 #define hidden_proc_found_msg "There are hidden processes found on your system.\n\
 There may be a rootkit installed on your system that is hiding these processes.\n"
@@ -80,12 +80,12 @@ int main(int argc, char **argv)
          // detect hidden files
          break;
       case 's':
-         // detect hooked system calls
+         // detect hooked functions
          memset(cmd_buf,0x0,BUF_SIZE);
          sprintf(cmd_buf,DETECTHOOKS_CMD);
          if (write(fd,cmd_buf,strlen(cmd_buf)) < 0)
             __err("[__ERROR_2__]", perror, -1);
-         printf("Scanning for hooked system calls. Run \"dmesg\" to view results.\n");
+         printf("Scanning for hooked functions. Run \"dmesg\" to view results.\n");
          break;
       case '?':
          usage_err();
