@@ -1,6 +1,3 @@
-# Internship Project
-Master branch should only contain fully working code. Create feature branch to work on new features and create a pull request when code is ready to be merged into master.
-
 # Detection Tool
 This is a simple rootkit detection tool for Linux that has been tested on Ubuntu 16.04 (4.15.0-45-generic). 
 
