@@ -25,6 +25,7 @@ MODULE_AUTHOR("Joshua Lim, Fai Yew");
 #define DETECTPID_CMD "detectpid"
 #define DETECTFILE_CMD "detectfile"
 #define DETECTHOOKS_CMD "detecthooks"
+#define DETECTMODULES_CMD "detectmods"
 
 // declarations
 static unsigned int syscall_table_size;
@@ -62,6 +63,7 @@ static int tool_procfs_entry_init(void);
 static ssize_t tool_procfs_write(struct file *, const char __user *, size_t, loff_t *);
 static ssize_t tool_procfs_read(struct file *, char __user *, size_t, loff_t *);
 static void hook_detection(void);
+static void analyze_modules(void);
 static struct proc_dir_entry *tool_procfs_entry, *procfs_root;
 
 // handlers for the read and write operations from/to tool's
@@ -107,6 +109,11 @@ static ssize_t tool_procfs_write(struct file *fp,
 		// detect hooked functions
 		hook_detection();
 	}
+	else if (strcmp(buf, DETECTMODULES_CMD) == 0)
+	{
+		// detect hidden modules
+		analyze_modules();
+	}
 
 	return count;
 }
@@ -124,6 +131,7 @@ static ssize_t tool_procfs_read(struct file *fp,
 		"\t* [-p] -->> to detect hidden PIDs on the system\n"
 		"\t* [-f] -->> to detect hidden files on the system\n"
 		"\t* [-s] -->> to detect hooked functions\n"
+		"\t* [-m] -->> to detect hidden modules\n"
 		"\x00";
 
 	if (copy_to_user(buf, tools_cmds, strlen(tools_cmds)))
@@ -165,12 +173,12 @@ static void hook_detection(void)
 	char path[6];
 
 	// scan sys_call_table
-	printk(KERN_INFO "hook_detection: Scanning sys_call_table...\n");
+	printk(KERN_INFO "detection tool: Scanning sys_call_table...\n");
 	for (sys_num = 0; sys_num < NR_syscalls; sys_num++)
 	{
 		if (addr_syscall_table[sys_num] != dump_syscall_table[sys_num])
 		{
-			printk(KERN_INFO "hook_detection: Hook detected! (syscall %d)\n", sys_num);
+			printk(KERN_ALERT "detection tool: Hook detected! (syscall %d)\n", sys_num);
 			no_of_syscall_hooks++;
 		}
 		// detect inline hook with mov and jmp
@@ -180,7 +188,7 @@ static void hook_detection(void)
 			memcpy(test, (void *)addr, 12);
 			if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)
 			{
-				printk(KERN_INFO "hook_detection: Hook detected! (syscall %d)\n", sys_num);
+				printk(KERN_ALERT "detection tool: Hook detected! (syscall %d)\n", sys_num);
 				no_of_syscall_hooks++;
 			}
 			// int j;
@@ -191,35 +199,26 @@ static void hook_detection(void)
 		}
 	}
 	if (no_of_syscall_hooks)
-	{
-		printk(KERN_INFO "hook_detection: %d hooked system calls detected!\n", no_of_syscall_hooks);
-	}
+		printk(KERN_ALERT "detection tool: %d hooked system calls detected!\n", no_of_syscall_hooks);
 	else
-	{
-		printk(KERN_INFO "hook_detection: No hooked system calls detected.\n");
-	}
+		printk(KERN_INFO "detection tool: No hooked system calls detected.\n");
 
-	printk(KERN_INFO "hook_detection: Scanning fops of /, /proc and /sys...\n");
+	printk(KERN_INFO "detection tool: Scanning fops of /, /proc and /sys...\n");
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
 #define SCAN_FOPS(NAME)                                                             \
 	sprintf(path, "/%s", #NAME);                                                    \
 	fp = filp_open(path, O_RDONLY, S_IRUSR);                                        \
 	if (IS_ERR(fp))                                                                 \
-	{                                                                               \
-		printk(KERN_ERR "hook_detection: Failed to open %s!\n", path);              \
-	}                                                                               \
-                                                                                    \
+		printk(KERN_ERR "detection tool: Failed to open %s!\n", path);              \
 	if (IS_ERR(fp->f_op))                                                           \
-	{                                                                               \
-		printk(KERN_WARNING "hook_detection: %s has no fops!\n", path);             \
-	}                                                                               \
+		printk(KERN_WARNING "detection tool: %s has no fops!\n", path);             \
                                                                                     \
 	addr = (unsigned long)fp->f_op->iterate_shared;                                 \
 	memcpy(test, (void *)addr, 12);                                                 \
 	if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) \
 	{                                                                               \
-		printk(KERN_INFO "hook_detection: %s fops hook detected!\n", path);         \
+		printk(KERN_ALERT "detection tool: %s fops hook detected!\n", path);        \
 		no_of_fops_hooks++;                                                         \
 	}
 #else
@@ -227,38 +226,72 @@ static void hook_detection(void)
 	sprintf(path, "/%s", #NAME);                                                    \
 	fp = filp_open(path, O_RDONLY, S_IRUSR);                                        \
 	if (IS_ERR(fp))                                                                 \
-	{                                                                               \
-		printk(KERN_ERR "hook_detection: Failed to open %s!\n", path);              \
-	}                                                                               \
-                                                                                    \
+		printk(KERN_ERR "detection tool: Failed to open %s!\n", path);              \
 	if (IS_ERR(fp->f_op))                                                           \
-	{                                                                               \
-		printk(KERN_WARNING "hook_detection: %s has no fops!\n", path);             \
-	}                                                                               \
+		printk(KERN_WARNING "detection tool: %s has no fops!\n", path);             \
                                                                                     \
 	addr = (unsigned long)fp->f_op->iterate;                                        \
 	memcpy(test, (void *)addr, 12);                                                 \
 	if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) \
 	{                                                                               \
-		printk(KERN_INFO "hook_detection: %s fops hook detected!\n", path);         \
+		printk(KERN_ALERT "detection tool: %s fops hook detected!\n", path);        \
 		no_of_fops_hooks++;                                                         \
 	}
 #endif
+
 	SCAN_FOPS()
 	SCAN_FOPS(proc)
 	SCAN_FOPS(sys)
 
 	if (no_of_fops_hooks)
-	{
-		printk(KERN_INFO "hook_detection: %d hooked fops detected!\n", no_of_fops_hooks);
-	}
+		printk(KERN_ALERT "detection tool: %d hooked fops detected!\n", no_of_fops_hooks);
 	else
-	{
-		printk(KERN_INFO "hook_detection: No hooked fops detected.\n");
-	}
+		printk(KERN_INFO "detection tool: No hooked fops detected.\n");
 
 	hooked_functions = no_of_fops_hooks + no_of_syscall_hooks;
-	printk(KERN_INFO "hook_detection: Scanning complete. A total of %d hooked functions on your system was detected.\n", hooked_functions);
+	if (hooked_functions)
+		printk(KERN_ALERT "detection tool: Scanning complete. A total of %d hooked functions on your system was detected.\n", hooked_functions);
+	else
+		printk(KERN_INFO "detection tool: Scanning complete. No hooked functions on your system were detected.\n");
+}
+
+// detect hidden modules
+static void analyze_modules(void)
+{
+	struct kset *mod_kset;
+	struct kobject *cur, *tmp;
+	struct module_kobject *kobj;
+	int modulesFound = 0;
+
+	printk(KERN_INFO "detection tool: Scanning Modules...\n");
+
+	mod_kset = (void *)kallsyms_lookup_name("module_kset");
+	if (!mod_kset)
+		return;
+
+	list_for_each_entry_safe(cur, tmp, &mod_kset->list, entry)
+	{
+		if (!kobject_name(tmp))
+			break;
+
+		kobj = container_of(tmp, struct module_kobject, kobj);
+
+		if (kobj && kobj->mod && kobj->mod->name)
+		{
+			mutex_lock(&module_mutex);
+			if (!find_module(kobj->mod->name))
+			{
+				printk(KERN_ALERT "detection tool: Module [%s] hidden.\n", kobj->mod->name);
+				modulesFound++;
+			}
+			mutex_unlock(&module_mutex);
+		}
+	}
+
+	if (modulesFound)
+		printk(KERN_ALERT "detection tool: Scanning complete. A total of %d hidden modules on your system was detected.\n", modulesFound);
+	else
+		printk(KERN_INFO "detection tool: Scanning complete. No hidden modules on your system were detected.\n");
 }
 
 static int tool_init(void)
@@ -269,7 +302,7 @@ static int tool_init(void)
 	addr_syscall_table = get_syscalls_table();
 	if (!addr_syscall_table)
 	{
-		printk(KERN_INFO "hook_detection: Failed - Address of syscalls table not found\n");
+		printk(KERN_INFO "detection tool: Failed - Address of syscalls table not found\n");
 		return -ECANCELED;
 	}
 
@@ -277,7 +310,7 @@ static int tool_init(void)
 	dump_syscall_table = kmalloc(syscall_table_size, GFP_KERNEL);
 	if (!dump_syscall_table)
 	{
-		printk(KERN_INFO "hook_detection: Failed - Not enough memory\n");
+		printk(KERN_INFO "detection tool: Failed - Not enough memory\n");
 		return -ENOMEM;
 	}
 	memcpy(dump_syscall_table, addr_syscall_table, syscall_table_size);
