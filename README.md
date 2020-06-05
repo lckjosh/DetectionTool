@@ -5,6 +5,7 @@ This is a simple LKM rootkit detection tool for Linux that has been tested on Ub
 - Detect Hidden PIDs
 - Detect Hidden Files
 - Detect Hooked Functions
+- Detect Hidden Modules
 
 # Installation
 ```
