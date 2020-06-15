@@ -32,39 +32,13 @@ static unsigned int syscall_table_size;
 static unsigned long *addr_syscall_table;
 static unsigned long *dump_syscall_table;
 
-//for 4.X
-//copied from /fs/proc/internal.h
-struct proc_dir_entry
-{
-	unsigned int low_ino;
-	umode_t mode;
-	nlink_t nlink;
-	kuid_t uid;
-	kgid_t gid;
-	loff_t size;
-	const struct inode_operations *proc_iops;
-	const struct file_operations *proc_fops;
-	struct proc_dir_entry *parent;
-	struct rb_root subdir;
-	struct rb_node subdir_node;
-	void *data;
-	atomic_t count;	 /* use count */
-	atomic_t in_use; /* number of callers into module in progress; */
-					 /* negative -> it's going away RSN */
-	struct completion *pde_unload_completion;
-	struct list_head pde_openers; /* who did ->open, but not ->release */
-	spinlock_t pde_unload_lock;	  /* proc_fops checks and pde_users bumps */
-	u8 namelen;
-	char name[];
-};
-
 // prototypes
 static int tool_procfs_entry_init(void);
 static ssize_t tool_procfs_write(struct file *, const char __user *, size_t, loff_t *);
 static ssize_t tool_procfs_read(struct file *, char __user *, size_t, loff_t *);
 static void hook_detection(void);
 static void analyze_modules(void);
-static struct proc_dir_entry *tool_procfs_entry, *procfs_root;
+static struct proc_dir_entry *tool_procfs_entry;
 
 // handlers for the read and write operations from/to tool's
 // proc filesystem entry
@@ -84,8 +58,6 @@ static int tool_procfs_entry_init(void)
 	if (tool_procfs_entry == NULL)
 		return 0;
 
-	procfs_root = tool_procfs_entry->parent;
-
 	return 1;
 }
 
@@ -94,10 +66,9 @@ static ssize_t tool_procfs_write(struct file *fp,
 								 size_t count,
 								 loff_t *offp)
 {
-	int c;
 	char buf[16];
-	if (*offp > 0 || count > 16)
-		return -EFAULT;
+	memset(buf, 0x0, 16);
+
 	if (copy_from_user(buf, ubuf, count))
 		return -EFAULT;
 
@@ -114,16 +85,17 @@ static ssize_t tool_procfs_write(struct file *fp,
 	else if (strcmp(buf, DETECTHOOKS_CMD) == 0)
 	{
 		// detect hooked functions
+		memset(buf, 0x0, 16);
 		hook_detection();
 	}
 	else if (strcmp(buf, DETECTMODULES_CMD) == 0)
 	{
 		// detect hidden modules
+		memset(buf, 0x0, 16);
 		analyze_modules();
 	}
 
-	c = strlen(buf);
-	return c;
+	return count;
 }
 
 static ssize_t tool_procfs_read(struct file *fp,
@@ -329,7 +301,7 @@ static int tool_init(void)
 
 static void tool_exit(void)
 {
-	remove_proc_entry(TOOL_PROCFS_ENTRYNAME, procfs_root);
+	proc_remove(tool_procfs_entry);
 	kfree(dump_syscall_table);
 	printk(KERN_INFO "detection tool: Exiting\n");
 }
