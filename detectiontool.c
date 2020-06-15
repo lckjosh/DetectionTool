@@ -90,10 +90,17 @@ static int tool_procfs_entry_init(void)
 }
 
 static ssize_t tool_procfs_write(struct file *fp,
-								 const char __user *buf,
+								 const char __user *ubuf,
 								 size_t count,
 								 loff_t *offp)
 {
+	int c;
+	char buf[16];
+	if (*offp > 0 || count > 16)
+		return -EFAULT;
+	if (copy_from_user(buf, ubuf, count))
+		return -EFAULT;
+
 	if (strcmp(buf, DETECTPID_CMD) == 0)
 	{
 		// detect hidden pids
@@ -115,7 +122,8 @@ static ssize_t tool_procfs_write(struct file *fp,
 		analyze_modules();
 	}
 
-	return count;
+	c = strlen(buf);
+	return c;
 }
 
 static ssize_t tool_procfs_read(struct file *fp,
