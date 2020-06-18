@@ -23,7 +23,7 @@ MODULE_AUTHOR("Joshua Lim, Fai Yew");
 
 // commands
 #define DETECTPID_CMD "detectpid"
-#define DETECTFILE_CMD "detectfile"
+#define DETECTINODE_CMD "detectinode"
 #define DETECTHOOKS_CMD "detecthooks"
 #define DETECTMODULES_CMD "detectmods"
 
@@ -74,23 +74,29 @@ static ssize_t tool_procfs_write(struct file *fp,
 
 	if (strcmp(buf, DETECTPID_CMD) == 0)
 	{
-		// detect hidden pids
+		// detect hidden pids (Userspace)
+		printk(KERN_INFO "detection tool: Detect hidden pids (-p) has been invoked by the user.\n");
+		memset(buf, 0x0, strlen(buf));
 	}
 
-	else if (strcmp(buf, DETECTFILE_CMD) == 0)
+	else if (strcmp(buf, DETECTINODE_CMD) == 0)
 	{
-		// detect hidden files
+		// detect hidden files (Userspace)
+		printk(KERN_INFO "detection tool: Detect hidden inode scan (-f) has been invoked by the user.\n");
+		memset(buf, 0x0, strlen(buf));
 	}
 
 	else if (strcmp(buf, DETECTHOOKS_CMD) == 0)
 	{
 		// detect hooked functions
+		printk(KERN_INFO "detection tool: Detect hooked function scan (-s) has been invoked by the user.\n");
 		memset(buf, 0x0, 16);
 		hook_detection();
 	}
 	else if (strcmp(buf, DETECTMODULES_CMD) == 0)
 	{
 		// detect hidden modules
+		printk(KERN_INFO "detection tool: Detect hidden module scan (-m) has been invoked by the user.\n");
 		memset(buf, 0x0, 16);
 		analyze_modules();
 	}
@@ -296,6 +302,9 @@ static int tool_init(void)
 	memcpy(dump_syscall_table, addr_syscall_table, syscall_table_size);
 
 	printk(KERN_INFO "detection tool: Init OK\n");
+
+	printk(KERN_INFO "detection tool: It is recommended to use \"tool -f\" the first time this LKM is loaded into the kernel.\n"); 
+
 	return 0;
 }
 

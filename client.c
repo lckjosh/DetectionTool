@@ -5,7 +5,13 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <math.h>
+
+#include <sys/stat.h>
+#include <getopt.h>
+#include <string.h>
+
 #include "detectpids.c"
+#include "detectinodes.c" 
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
@@ -17,7 +23,7 @@
 // [-f] detect hidden files
 
 #define DETECTPID_CMD "detectpid"
-#define DETECTFILE_CMD "detectfile"
+#define DETECTINODE_CMD "detectinode"
 #define DETECTHOOKS_CMD "detecthooks"
 #define DETECTMODULES_CMD "detectmods"
 
@@ -67,19 +73,46 @@ int main(int argc, char **argv)
       switch (opt)
       {
       case 'p':
+         // detect hidden processes
          if (getuid() != 0)
          {
             printf("You must be root to perform this function!\n");
             exit(1);
          }
          checkallquick();
+
+         // Log to LKM
+         memset(cmd_buf, 0x0, BUF_SIZE);
+         sprintf(cmd_buf, DETECTPID_CMD);
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
+            __err("[__ERROR_2__]", perror, -1);
+         }
+         else {
+            write(fd, DETECTPID_CMD, sizeof(DETECTPID_CMD)); 
+         }
+
          if (found_HP)
             printf(hidden_proc_found_msg);
          else
             printf(hidden_proc_notfound_msg);
          break;
       case 'f':
-         // detect hidden files
+         // detect hidden inodes
+         if (hideinodedetector() != 0){
+            printf("client.c: Python script failed to execute completely.\n");
+            break;
+         }
+         else {
+            // Log to LKM
+            memset(cmd_buf, 0x0, BUF_SIZE);
+            sprintf(cmd_buf, DETECTINODE_CMD);
+            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
+               __err("[__ERROR_2__]", perror, -1);
+            }
+            else {
+               write(fd, DETECTINODE_CMD, sizeof(DETECTINODE_CMD)); 
+            }
+         }
          break;
       case 's':
          // detect hooked functions
