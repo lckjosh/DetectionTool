@@ -9,12 +9,30 @@ For more detailed explanations, please visit the [wiki](https://github.com/lckjo
 - Detect Hooked Functions
 - Detect Hidden Modules
 
+## Dependencies
+- Linux Headers 
+- GCC Compiler (Version > 5.0.0)
+- The Sleuth Kit (TSK) 
+- Python (Version 3.5)
+- pytsk3 module
+
+For Debian-based distros: 
+```
+sudo apt install linux-headers-$(uname -r)
+sudo apt install build-essential
+
+sudo apt install sleuthkit 
+sudo apt install python3
+sudo apt install python3-pip
+sudo pip3 install pytsk3
+
+```
 # Installation
 ```
 git clone https://github.com/lckjosh/DetectionTool.git
 cd DetectionTool
 make
-gcc client.c -o client
+gcc client.c $(python3.5-config --cflags) $(python3.5-config --ldflags) -o client
 ```
 # Usage
 ```

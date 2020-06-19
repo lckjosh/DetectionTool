@@ -40,7 +40,7 @@ int hideinodedetector(void){
 
     return_value = PyRun_SimpleFile(fp, python_argv[0]); // executes hidden-inode-detector.py
     if (return_value < 0){
-        printf("filedirdetector.c: Python script hidden-inode-detector.py raised an exception. Hidden inode scan is incomplete.\n");
+        printf("filedirdetector.c: Python script hidden-inode-detector.py has raised an exception. Hidden inode scan is incomplete.\n");
         return return_value;
     }
 

@@ -61,6 +61,9 @@ A rootkit may still be present on your system but is not hiding any process at t
 
 int main(int argc, char **argv)
 {
+   if (argc < 2)
+      usage_err(); 
+   
    char cmd_buf[BUF_SIZE];
    int opt, fd;
    fd = open(PROCFS_ENTRYNAME, O_RDWR);
@@ -79,17 +82,16 @@ int main(int argc, char **argv)
             printf("You must be root to perform this function!\n");
             exit(1);
          }
-         checkallquick();
-
+         
          // Log to LKM
          memset(cmd_buf, 0x0, BUF_SIZE);
          sprintf(cmd_buf, DETECTPID_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+         {
             __err("[__ERROR_2__]", perror, -1);
          }
-         else {
-            write(fd, DETECTPID_CMD, sizeof(DETECTPID_CMD)); 
-         }
+
+         checkallquick();
 
          if (found_HP)
             printf(hidden_proc_found_msg);
@@ -97,21 +99,17 @@ int main(int argc, char **argv)
             printf(hidden_proc_notfound_msg);
          break;
       case 'f':
-         // detect hidden inodes
-         if (hideinodedetector() != 0){
-            printf("client.c: Python script failed to execute completely.\n");
-            break;
+         // Log to LKM
+         memset(cmd_buf, 0x0, BUF_SIZE);
+         sprintf(cmd_buf, DETECTINODE_CMD);
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
+            __err("[__ERROR_2__]", perror, -1);
          }
-         else {
-            // Log to LKM
-            memset(cmd_buf, 0x0, BUF_SIZE);
-            sprintf(cmd_buf, DETECTINODE_CMD);
-            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
-               __err("[__ERROR_2__]", perror, -1);
-            }
-            else {
-               write(fd, DETECTINODE_CMD, sizeof(DETECTINODE_CMD)); 
-            }
+         // detect hidden inodes
+         if (hideinodedetector() != 0)
+         {
+            printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
+            break;
          }
          break;
       case 's':

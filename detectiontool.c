@@ -76,14 +76,14 @@ static ssize_t tool_procfs_write(struct file *fp,
 	{
 		// detect hidden pids (Userspace)
 		printk(KERN_INFO "detection tool: Detect hidden pids (-p) has been invoked by the user.\n");
-		memset(buf, 0x0, strlen(buf));
+		memset(buf, 0x0, 16);
 	}
 
 	else if (strcmp(buf, DETECTINODE_CMD) == 0)
 	{
 		// detect hidden files (Userspace)
 		printk(KERN_INFO "detection tool: Detect hidden inode scan (-f) has been invoked by the user.\n");
-		memset(buf, 0x0, strlen(buf));
+		memset(buf, 0x0, 16);
 	}
 
 	else if (strcmp(buf, DETECTHOOKS_CMD) == 0)

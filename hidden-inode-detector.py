@@ -186,7 +186,7 @@ anomalies_set = set()
 # base scan, write current_set set of inodes in BASE_SCAN_FILE into basescan.txt line by line
 if not os.path.exists(NESTED_DIR_PWD + BASE_SCAN_FILE):
     print()
-    print("Ensure that no user applications are running while initial hidden files & directory scan takes place")
+    # print("Ensure that no user applications are running while initial hidden files & directory scan takes place")
     base_record = open(NESTED_DIR_PWD + BASE_SCAN_FILE, 'x')
     for i in current_set:
         base_record.write(str(i))
@@ -285,6 +285,6 @@ else:
         print("No anomalies detected. No rootkit(s) are actively hiding inodes. ") # no inodes in anomalies_set 
         print()
 
-    print("Current scan finished in %s seconds" % (time.time() - start_time))
+    print("Hidden Files & Directory scan finished in %s seconds" % (time.time() - start_time))
     print()
     print("===== Hidden Files & Directory Scan Finished =====")
