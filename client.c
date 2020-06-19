@@ -82,7 +82,6 @@ int main(int argc, char **argv)
             printf("You must be root to perform this function!\n");
             exit(1);
          }
-         
          // Log to LKM
          memset(cmd_buf, 0x0, BUF_SIZE);
          sprintf(cmd_buf, DETECTPID_CMD);
@@ -99,13 +98,18 @@ int main(int argc, char **argv)
             printf(hidden_proc_notfound_msg);
          break;
       case 'f':
+         // detect hidden inodes
+         if (getuid() != 0)
+         {
+            printf("You must be root to perform this function!\n");
+            exit(1);
+         }
          // Log to LKM
          memset(cmd_buf, 0x0, BUF_SIZE);
          sprintf(cmd_buf, DETECTINODE_CMD);
          if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
             __err("[__ERROR_2__]", perror, -1);
          }
-         // detect hidden inodes
          if (hideinodedetector() != 0)
          {
             printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
