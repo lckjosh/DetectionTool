@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "detectpids.c"
-#include "detectinodes.c" 
+//#include "detectinodes.c"
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
@@ -62,8 +62,8 @@ A rootkit may still be present on your system but is not hiding any process at t
 int main(int argc, char **argv)
 {
    if (argc < 2)
-      usage_err(); 
-   
+      usage_err();
+
    char cmd_buf[BUF_SIZE];
    int opt, fd;
    fd = open(PROCFS_ENTRYNAME, O_RDWR);
@@ -98,6 +98,7 @@ int main(int argc, char **argv)
             printf(hidden_proc_notfound_msg);
          break;
       case 'f':
+         int status;
          // detect hidden inodes
          if (getuid() != 0)
          {
@@ -107,10 +108,12 @@ int main(int argc, char **argv)
          // Log to LKM
          memset(cmd_buf, 0x0, BUF_SIZE);
          sprintf(cmd_buf, DETECTINODE_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+         {
             __err("[__ERROR_2__]", perror, -1);
          }
-         if (hideinodedetector() != 0)
+         status = system("./hidden-inode-detector.py /dev/sda1 / /");
+         if (status != 0)
          {
             printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
             break;
