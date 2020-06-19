@@ -98,7 +98,6 @@ int main(int argc, char **argv)
             printf(hidden_proc_notfound_msg);
          break;
       case 'f':
-         int status;
          // detect hidden inodes
          if (getuid() != 0)
          {
@@ -112,7 +111,7 @@ int main(int argc, char **argv)
          {
             __err("[__ERROR_2__]", perror, -1);
          }
-         status = system("./hidden-inode-detector.py /dev/sda1 / /");
+         int status = system("./hidden-inode-detector.py /dev/sda1 / /");
          if (status != 0)
          {
             printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
