@@ -28,7 +28,8 @@ pip3 install pytsk3
 git clone https://github.com/lckjosh/DetectionTool.git
 cd DetectionTool
 make
-gcc client.c $(python3.5-config --cflags) $(python3.5-config --ldflags) -o client
+chmod +x ./hidden-inode-detector.py
+gcc client.c -o client
 ```
 __NOTE: RUN `sudo ./client -f` upon installation to form initial baseline for detecting hidden inodes.__
 # Usage
