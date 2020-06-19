@@ -23,6 +23,7 @@ For Debian-based distros:
 sudo apt install linux-headers-$(uname -r) build-essential sleuthkit python3 python3-pip
 pip3 install pytsk3
 ```
+## Cloning and Compilation
 ```
 git clone https://github.com/lckjosh/DetectionTool.git
 cd DetectionTool
