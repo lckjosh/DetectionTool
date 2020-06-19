@@ -5,7 +5,13 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <math.h>
+
+#include <sys/stat.h>
+#include <getopt.h>
+#include <string.h>
+
 #include "detectpids.c"
+#include "detectinodes.c" 
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
@@ -17,7 +23,7 @@
 // [-f] detect hidden files
 
 #define DETECTPID_CMD "detectpid"
-#define DETECTFILE_CMD "detectfile"
+#define DETECTINODE_CMD "detectinode"
 #define DETECTHOOKS_CMD "detecthooks"
 #define DETECTMODULES_CMD "detectmods"
 
@@ -55,6 +61,9 @@ A rootkit may still be present on your system but is not hiding any process at t
 
 int main(int argc, char **argv)
 {
+   if (argc < 2)
+      usage_err(); 
+   
    char cmd_buf[BUF_SIZE];
    int opt, fd;
    fd = open(PROCFS_ENTRYNAME, O_RDWR);
@@ -67,19 +76,45 @@ int main(int argc, char **argv)
       switch (opt)
       {
       case 'p':
+         // detect hidden processes
          if (getuid() != 0)
          {
             printf("You must be root to perform this function!\n");
             exit(1);
          }
+         // Log to LKM
+         memset(cmd_buf, 0x0, BUF_SIZE);
+         sprintf(cmd_buf, DETECTPID_CMD);
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+         {
+            __err("[__ERROR_2__]", perror, -1);
+         }
+
          checkallquick();
+
          if (found_HP)
             printf(hidden_proc_found_msg);
          else
             printf(hidden_proc_notfound_msg);
          break;
       case 'f':
-         // detect hidden files
+         // detect hidden inodes
+         if (getuid() != 0)
+         {
+            printf("You must be root to perform this function!\n");
+            exit(1);
+         }
+         // Log to LKM
+         memset(cmd_buf, 0x0, BUF_SIZE);
+         sprintf(cmd_buf, DETECTINODE_CMD);
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0){
+            __err("[__ERROR_2__]", perror, -1);
+         }
+         if (hideinodedetector() != 0)
+         {
+            printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
+            break;
+         }
          break;
       case 's':
          // detect hooked functions
