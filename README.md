@@ -18,14 +18,7 @@ For more detailed explanations, please visit the [wiki](https://github.com/lckjo
 
 For Debian-based distros: 
 ```
-sudo apt install linux-headers-$(uname -r)
-sudo apt install build-essential
-
-sudo apt install sleuthkit 
-sudo apt install python3
-sudo apt install python3-pip
-sudo pip3 install pytsk3
-
+sudo apt install linux-headers-$(uname -r) build-essential sleuthkit python3 python3-pip pytsk3
 ```
 # Installation
 ```
