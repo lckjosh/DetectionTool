@@ -30,7 +30,7 @@ cd DetectionTool
 make
 gcc client.c $(python3.5-config --cflags) $(python3.5-config --ldflags) -o client
 ```
-
+__NOTE: RUN `sudo ./client -f` upon installation to form initial baseline for detecting hidden inodes.__
 # Usage
 ```
 sudo insmod detectiontool.ko
