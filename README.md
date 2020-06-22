@@ -15,8 +15,8 @@ For more detailed explanations, please visit the [wiki](https://github.com/lckjo
 - Linux Headers 
 - GCC Compiler (Version > 5.0.0)
 - The Sleuth Kit (TSK) 
-- Python (Version 3.5)
-- pytsk3 module
+- Python 3
+- pytsk3 library
 
 For Debian-based distros: 
 ```
@@ -28,8 +28,6 @@ pip3 install pytsk3
 git clone https://github.com/lckjosh/DetectionTool.git
 cd DetectionTool
 make
-chmod +x ./hidden-inode-detector.py
-gcc client.c -o client
 ```
 __NOTE: RUN `sudo ./client -f` upon installation to form initial baseline for detecting hidden inodes.__
 # Usage

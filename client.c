@@ -11,7 +11,7 @@
 #include <string.h>
 
 #include "detectpids.c"
-//#include "detectinodes.c"
+#include "detectinodes.c"
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
@@ -111,7 +111,8 @@ int main(int argc, char **argv)
          {
             __err("[__ERROR_2__]", perror, -1);
          }
-         int status = system("./hidden-inode-detector.py /dev/sda1 / /");
+         // int status = system("./hidden-inode-detector.py /dev/sda1 / /");
+         int status = hideinodedetector();
          if (status != 0)
          {
             printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
