@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import os
 import sys
@@ -103,7 +103,6 @@ def get_tsk_inodes(volume, root):
 
     return my_inodes
 
-
 def get_fs_inodes(path):
     inodes = set()
     # get status of file descriptor. stat() syscall
@@ -138,6 +137,14 @@ def create_file_title(title):
         stamped_title = title + str(now.date()) + "-" + str(index) + ".txt"
     return stamped_title
 
+def exception_error(error_message):
+    print("Error: " + error_message)
+    if os.path.isfile(current_scan):
+        os.remove(current_scan)
+    print("Error: Current scan is terminated.")
+    print()
+    exit(1)
+
 # ==== Start =====
 
 l = len(sys.argv)
@@ -159,14 +166,13 @@ os.system('/bin/sync')
 # this command free pagecache, frees up kernel memory
 os.system('/bin/echo 3 > /proc/sys/vm/drop_caches')
 
-print()
 print("===== Hidden Files & Directories Scan =====")
 
 # the main two tests
 tsk_inodes = get_tsk_inodes(volume=volume, root=root)  # via read() syscall
-print("test tsk_inodes done [read() syscall]") # At most 10 seconds
+print("- test tsk_inodes done [read() syscall]") # At most 10 seconds
 fs_inodes = get_fs_inodes(mount_path)  # via getdents() and stat() syscall
-print("test fs_inodes done [getdents() & stat() syscall]") # At most up to 60 seconds
+print("- test fs_inodes done [getdents() & stat() syscall]") # At most up to 60 seconds
 
 # current_set stores result of current scan (may contain many false positives)
 # current_set is compared with base_set for anomalies for concurrent scans. 
@@ -206,7 +212,7 @@ else:
         current_record.write(str(i))
         current_record.write("\n")
     
-    print("Current hidden files & directory scan set is saved to: " + str(current_scan))
+    print("Current hidden files & directory scan set is saved to: " + str(NESTED_DIR_PWD + current_scan))
     current_record.close() 
 
     # create a set from the results from the base scan, of which the element of inodes are stored in basescan.txt
@@ -257,7 +263,10 @@ else:
             # Execute Shell commands with python: https://janakiev.com/blog/python-shell-commands/
             # print out pwd of possible hidden files by using tsk's ffind command
             # ffind -u /dev/sda1 <inode-value>
-            process = subprocess.Popen(['ffind', '-u', str(sys.argv[1]), str(anomaly)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            try:
+                process = subprocess.Popen(['ffind', '-u', str(sys.argv[1]), str(anomaly)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            except FileNotFoundError: 
+                exception_error("The Seluth Kit (TSK) is not installed. Install TSK with [sudo apt install seluthkit].")
             stdout, stderr = process.communicate()
             ffind_output = stdout.decode("utf-8").split('\n')[0]
             if (ffind_output == "File name not found for inode"):
@@ -280,11 +289,12 @@ else:
         print("Hidden Files & Directory Scan complete. There may be possible rootkit(s) installed on the system that are currently hiding " + str(final_hidden_inodes) + " inode(s) [i.e. hidden files & directories].")
         print()
     else: 
+        print()
         print("No hidden inodes found in list of possible hidden inodes.")
         print()
         print("No anomalies detected. No rootkit(s) are actively hiding inodes. ") # no inodes in anomalies_set 
         print()
 
-    print("Hidden Files & Directory scan finished in %s seconds" % (time.time() - start_time))
+    print("Hidden Files & Directory Scan took %s seconds" % "{:.2f}".format((time.time() - start_time)))
     print()
-    print("===== Hidden Files & Directory Scan Finished =====")
+    print("===== Hidden inode(s) Scan Finished =====")
