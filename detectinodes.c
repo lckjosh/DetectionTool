@@ -1,4 +1,5 @@
-#include <python3.5m/Python.h> // python-c API, python3.5m is in Ubuntu 16.04 TLS
+#include <Python.h> // python-c API
+//#include <python3.5m/Python.h> 
 #include <wchar.h>
 
 #define PYTHON_FILENAME "hidden-inode-detector.py"
