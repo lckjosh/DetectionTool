@@ -43,7 +43,7 @@ There may be a rootkit installed on your system that is hiding these processes.\
 #define hidden_proc_notfound_msg "There are no hidden processes found on your system.\n\
 A rootkit may still be present on your system but is not hiding any process at the moment.\n"
 
-#define OPTS_STR ":pf:sm"
+#define OPTS_STR "pf:sm"
 
 #define __err(msg, prnt_func, err_code) \
    do                                   \
