@@ -144,8 +144,8 @@ static void hook_detection(void)
 	int no_of_net_hooks = 0;
 	int hooked_functions = 0;
 	char path[6];
-	struct tcp_seq_afinfo *tcpafinfo;
-	struct udp_seq_afinfo *udpafinfo;
+	struct tcp_seq_afinfo *tcp_afinfo;
+	struct udp_seq_afinfo *udp_afinfo;
 
 	// scan sys_call_table
 	printk(KERN_INFO "detection tool: Scanning sys_call_table...\n");
@@ -251,14 +251,14 @@ static void hook_detection(void)
 	/* tcp */                                                                           \
 	if (!strncmp("tcp", #NAME, 3))                                                      \
 	{                                                                                   \
-		tcpafinfo = PDE_DATA(fp->f_path.dentry->d_inode);                               \
-		addr = (unsigned long)tcpafinfo->seq_ops.show;                                  \
+		tcp_afinfo = PDE_DATA(fp->f_path.dentry->d_inode);                               \
+		addr = (unsigned long)tcp_afinfo->seq_ops.show;                                  \
 	}                                                                                   \
 	/* udp */                                                                           \
 	else                                                                                \
 	{                                                                                   \
-		udpafinfo = PDE_DATA(fp->f_path.dentry->d_inode);                               \
-		addr = (unsigned long)udpafinfo->seq_ops.show;                                  \
+		udp_afinfo = PDE_DATA(fp->f_path.dentry->d_inode);                               \
+		addr = (unsigned long)udp_afinfo->seq_ops.show;                                  \
 	}                                                                                   \
                                                                                         \
 	if (!core_kern_text(addr))                                                          \
