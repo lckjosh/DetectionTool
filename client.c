@@ -31,9 +31,9 @@
 
 #define BUF_SIZE 16
 
-#define usage_err_msg "[Usage] ./client [-p] [-f] [-s] [-m]\n\
+#define usage_err_msg "[Usage] ./client [-p] [-f <filesystem-mounted-at-root-directory> ] [-s] [-m]\n\
 \t[-p] detect hidden PIDs\n\
-\t[-f] detect hidden files\n\
+\t[-f <filesystem-mounted-at-root-directory> ] detect hidden files (./client -f /dev/sda1)\n\
 \t[-s] detect hooked functions\n\
 \t[-m] detect hidden modules\n"
 
@@ -43,7 +43,7 @@ There may be a rootkit installed on your system that is hiding these processes.\
 #define hidden_proc_notfound_msg "There are no hidden processes found on your system.\n\
 A rootkit may still be present on your system but is not hiding any process at the moment.\n"
 
-#define OPTS_STR "pfsm"
+#define OPTS_STR ":pf:sm"
 
 #define __err(msg, prnt_func, err_code) \
    do                                   \
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
             __err("[__ERROR_2__]", perror, -1);
          }
          // int status = system("./hidden-inode-detector.py /dev/sda1 / /");
-         int status = hideinodedetector();
+         int status = hideinodedetector(optarg, sizeof(optarg));
          if (status != 0)
          {
             printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
@@ -136,6 +136,7 @@ int main(int argc, char **argv)
          printf("Scanning for hidden modules. Run \"dmesg\" to view results.\n");
          break;
       case '?':
+         printf("unknown option: %c\n", optopt);
          usage_err();
          break;
       case ':':

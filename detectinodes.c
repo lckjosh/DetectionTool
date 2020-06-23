@@ -4,14 +4,18 @@
 
 #define PYTHON_FILENAME "hidden-inode-detector.py"
 
-int hideinodedetector(void);
+int hideinodedetector(const char* user_optarg, int user_optarg_size);
 
-int hideinodedetector(void){
+int hideinodedetector(const char* user_optarg, int user_optarg_size){
 
     int return_value = 0;
-
     int python_argc = 5;
-    const char* python_argv[] = {PYTHON_FILENAME, "/dev/sda1", "/", "/", ""}; // python3 hidden-inode-detector.py /dev/sda1 / /
+
+    char str_new[user_optarg_size];
+    strcpy(str_new, user_optarg);
+    // printf("%s\n", str_new);
+    
+    const char* python_argv[] = {PYTHON_FILENAME, str_new, "/", "/", ""}; // python3 hidden-inode-detector.py /dev/sda1 / /
 
     wchar_t arg0[100];
     mbstowcs(arg0, python_argv[0], 100); // Converts char* to wchar_t*

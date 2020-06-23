@@ -37,7 +37,13 @@ sudo insmod detectiontool.ko
 
 Options:
 [-p] detect hidden PIDs (run with sudo)
-[-f] detect hidden files (run with sudo)
+[-f <filesystem-mounted-at-root-directory> ] detect hidden files (run with sudo)
 [-s] detect hooked functions
 [-m] detect hidden modules
+
+Example:
+./client -p
+./client -f /dev/sda1 
+./client -s
+./client -m 
 ```
