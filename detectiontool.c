@@ -28,9 +28,8 @@ MODULE_AUTHOR("Joshua Lim, Fai Yew");
 #define DETECTMODULES_CMD "detectmods"
 
 // declarations
-static unsigned int syscall_table_size;
 static unsigned long *addr_syscall_table;
-static unsigned long *dump_syscall_table;
+static int (*core_kern_text)(unsigned long addr);
 
 // prototypes
 static int tool_procfs_entry_init(void);
@@ -130,23 +129,7 @@ static ssize_t tool_procfs_read(struct file *fp,
 	return (ssize_t)strlen(tools_cmds);
 }
 
-// detect hooked system call table
-static unsigned long *get_syscalls_table(void)
-{
-	unsigned long *syscall_table;
-	syscall_table = (unsigned long *)kallsyms_lookup_name("sys_call_table");
-	return syscall_table;
-}
-
-static unsigned int get_size_syscalls_table(void)
-{
-	unsigned int size = 0;
-
-	while (addr_syscall_table[size++])
-		;
-	return size * sizeof(unsigned long *);
-}
-
+// detect hooks
 static void hook_detection(void)
 {
 	unsigned int sys_num = 0;
@@ -162,7 +145,8 @@ static void hook_detection(void)
 	printk(KERN_INFO "detection tool: Scanning sys_call_table...\n");
 	for (sys_num = 0; sys_num < NR_syscalls; sys_num++)
 	{
-		if (addr_syscall_table[sys_num] != dump_syscall_table[sys_num])
+		addr = addr_syscall_table[sys_num];
+		if (!core_kern_text(addr))
 		{
 			printk(KERN_ALERT "detection tool: Hook detected! (syscall %d)\n", sys_num);
 			no_of_syscall_hooks++;
@@ -170,18 +154,12 @@ static void hook_detection(void)
 		// detect inline hook with mov and jmp
 		else
 		{
-			addr = addr_syscall_table[sys_num];
 			memcpy(test, (void *)addr, 12);
 			if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)
 			{
 				printk(KERN_ALERT "detection tool: Hook detected! (syscall %d)\n", sys_num);
 				no_of_syscall_hooks++;
 			}
-			// int j;
-			// for (j = 0; j < 12; j++)
-			// {
-			// 	printk(KERN_INFO "test: %x\n", test[j]);
-			// }
 		}
 	}
 	if (no_of_syscall_hooks)
@@ -192,36 +170,53 @@ static void hook_detection(void)
 	printk(KERN_INFO "detection tool: Scanning fops of /, /proc and /sys...\n");
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
-#define SCAN_FOPS(NAME)                                                             \
-	sprintf(path, "/%s", #NAME);                                                    \
-	fp = filp_open(path, O_RDONLY, S_IRUSR);                                        \
-	if (IS_ERR(fp))                                                                 \
-		printk(KERN_ERR "detection tool: Failed to open %s!\n", path);              \
-	if (IS_ERR(fp->f_op))                                                           \
-		printk(KERN_WARNING "detection tool: %s has no fops!\n", path);             \
-                                                                                    \
-	addr = (unsigned long)fp->f_op->iterate_shared;                                 \
-	memcpy(test, (void *)addr, 12);                                                 \
-	if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) \
-	{                                                                               \
-		printk(KERN_ALERT "detection tool: %s fops hook detected!\n", path);        \
-		no_of_fops_hooks++;                                                         \
+#define SCAN_FOPS(NAME)                                                                 \
+	sprintf(path, "/%s", #NAME);                                                        \
+	fp = filp_open(path, O_RDONLY, S_IRUSR);                                            \
+	if (IS_ERR(fp))                                                                     \
+		printk(KERN_ERR "detection tool: Failed to open %s!\n", path);                  \
+	if (IS_ERR(fp->f_op))                                                               \
+		printk(KERN_WARNING "detection tool: %s has no fops!\n", path);                 \
+                                                                                        \
+	addr = (unsigned long)fp->f_op->iterate_shared;                                     \
+	if (!core_kern_text(addr))                                                          \
+	{                                                                                   \
+		printk(KERN_ALERT "detection tool: Hook detected! (syscall %d)\n", sys_num);    \
+		no_of_syscall_hooks++;                                                          \
+	}                                                                                   \
+	else                                                                                \
+	{                                                                                   \
+		memcpy(test, (void *)addr, 12);                                                 \
+		if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) \
+		{                                                                               \
+			printk(KERN_ALERT "detection tool: %s fops hook detected!\n", path);        \
+			no_of_fops_hooks++;                                                         \
+		}                                                                               \
 	}
+
 #else
-#define SCAN_FOPS(NAME)                                                             \
-	sprintf(path, "/%s", #NAME);                                                    \
-	fp = filp_open(path, O_RDONLY, S_IRUSR);                                        \
-	if (IS_ERR(fp))                                                                 \
-		printk(KERN_ERR "detection tool: Failed to open %s!\n", path);              \
-	if (IS_ERR(fp->f_op))                                                           \
-		printk(KERN_WARNING "detection tool: %s has no fops!\n", path);             \
-                                                                                    \
-	addr = (unsigned long)fp->f_op->iterate;                                        \
-	memcpy(test, (void *)addr, 12);                                                 \
-	if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) \
-	{                                                                               \
-		printk(KERN_ALERT "detection tool: %s fops hook detected!\n", path);        \
-		no_of_fops_hooks++;                                                         \
+#define SCAN_FOPS(NAME)                                                                 \
+	sprintf(path, "/%s", #NAME);                                                        \
+	fp = filp_open(path, O_RDONLY, S_IRUSR);                                            \
+	if (IS_ERR(fp))                                                                     \
+		printk(KERN_ERR "detection tool: Failed to open %s!\n", path);                  \
+	if (IS_ERR(fp->f_op))                                                               \
+		printk(KERN_WARNING "detection tool: %s has no fops!\n", path);                 \
+                                                                                        \
+	addr = (unsigned long)fp->f_op->iterate;                                            \
+	if (!core_kern_text(addr))                                                          \
+	{                                                                                   \
+		printk(KERN_ALERT "detection tool: Hook detected! (syscall %d)\n", sys_num);    \
+		no_of_syscall_hooks++;                                                          \
+	}                                                                                   \
+	else                                                                                \
+	{                                                                                   \
+		memcpy(test, (void *)addr, 12);                                                 \
+		if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) \
+		{                                                                               \
+			printk(KERN_ALERT "detection tool: %s fops hook detected!\n", path);        \
+			no_of_fops_hooks++;                                                         \
+		}                                                                               \
 	}
 #endif
 
@@ -285,25 +280,22 @@ static int tool_init(void)
 	if (!tool_procfs_entry_init())
 		return -1;
 
-	addr_syscall_table = get_syscalls_table();
+	addr_syscall_table = (unsigned long *)kallsyms_lookup_name("sys_call_table");
+	core_kern_text = (void *)kallsyms_lookup_name("core_kernel_text");
+
 	if (!addr_syscall_table)
 	{
 		printk(KERN_INFO "detection tool: Failed - Address of syscalls table not found\n");
 		return -ECANCELED;
 	}
-
-	syscall_table_size = get_size_syscalls_table();
-	dump_syscall_table = kmalloc(syscall_table_size, GFP_KERNEL);
-	if (!dump_syscall_table)
+	if (!core_kern_text)
 	{
-		printk(KERN_INFO "detection tool: Failed - Not enough memory\n");
-		return -ENOMEM;
+		printk(KERN_INFO "detection tool: Failed - Core Kernel Text not found\n");
+		return -ECANCELED;
 	}
-	memcpy(dump_syscall_table, addr_syscall_table, syscall_table_size);
 
 	printk(KERN_INFO "detection tool: Init OK\n");
-
-	printk(KERN_INFO "detection tool: It is recommended to use \"tool -f\" the first time this LKM is loaded into the kernel.\n"); 
+	printk(KERN_INFO "detection tool: It is recommended to run \"sudo ./client -f\" the first time this LKM is loaded into the kernel.\n");
 
 	return 0;
 }
@@ -311,7 +303,6 @@ static int tool_init(void)
 static void tool_exit(void)
 {
 	proc_remove(tool_procfs_entry);
-	kfree(dump_syscall_table);
 	printk(KERN_INFO "detection tool: Exiting\n");
 }
 
