@@ -79,13 +79,18 @@ def tsk_walk_path(fs, inode, inodes=set(), inodes_dir=set(), counter=[0]):
 
 # Part 1 tsk
 def get_tsk_inodes(volume, root):
-    # open the file system (e.g. /dev/sda1)
-    img = pytsk3.Img_Info(volume)
-    # FS_Info used as a handle for more detailed file system analysis
-    fs = pytsk3.FS_Info(img)
-    # goes to tsk_walk_path(). root is /
-    # first time scan to collect inodes in same dir
-    my_inodes, my_inodes_dir = tsk_walk_path(fs=fs, inode=root)
+    try:
+        # open the file system (e.g. /dev/sda1)
+        img = pytsk3.Img_Info(volume)
+        # FS_Info used as a handle for more detailed file system analysis
+        fs = pytsk3.FS_Info(img)
+        # goes to tsk_walk_path(). root is /
+        # first time scan to collect inodes in same dir
+        my_inodes, my_inodes_dir = tsk_walk_path(fs=fs, inode=root)
+    except (OSError) as e:
+        print(e)
+        print("Error: " + volume + " is not a valid mount point. Current hidden files & directorys scan is terminated.")
+        sys.exit()
 
     # https://stackoverflow.com/questions/28584470/iterating-over-a-growing-set-in-python
     # This part tries to go through each dir found the first tsk_walk_path scan, and so on.
