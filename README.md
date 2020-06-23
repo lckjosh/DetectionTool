@@ -41,7 +41,7 @@ Options:
 [-s] detect hooked functions
 [-m] detect hidden modules
 
-Example:
+Examples:
 ./client -p
 ./client -f /dev/sda1 
 ./client -s
