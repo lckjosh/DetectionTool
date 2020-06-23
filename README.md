@@ -1,5 +1,5 @@
 # Detection Tool
-This is a simple LKM rootkit detection tool for Linux that has been tested on Ubuntu 16.04 (4.15.0-45-generic).  
+This is a simple LKM rootkit detection tool for Linux.  
 
 For more detailed explanations, please visit the [wiki](https://github.com/lckjosh/DetectionTool/wiki).
 
