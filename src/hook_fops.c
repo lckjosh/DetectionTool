@@ -1,4 +1,4 @@
-#include "detectiontool.h"
+#include "main.h"
 
 extern int (*core_kern_text)(unsigned long addr); /* Core Kernel Text */
 

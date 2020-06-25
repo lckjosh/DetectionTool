@@ -1,4 +1,4 @@
-#include "detectiontool.h"
+#include "main.h"
 #include "hook_syscalls.h"
 #include "hook_fops.h"
 #include "hook_networks.h"
@@ -122,9 +122,7 @@ static ssize_t tool_procfs_read(struct file *fp,
 // detect hooks
 static void hook_detection(void)
 {
-	int hooked_functions = scan_sys_call_table();
-	hooked_functions += scan_fops();
-	hooked_functions += scan_networks();
+	int hooked_functions = scan_sys_call_table() + scan_fops() + scan_networks();
 	// print summary
 	if (hooked_functions)
 		printk(KERN_ALERT "detection tool: Scanning complete. A total of %d hooked functions on your system was detected.\n", hooked_functions);

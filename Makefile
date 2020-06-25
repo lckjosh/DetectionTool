@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
-	obj-m := mytool.o
-	mytool-objs := detectiontool.o hook_syscalls.o hook_fops.o hook_networks.o
+	obj-m := detectiontool.o
+	detectiontool-objs := src/main.o src/hook_syscalls.o src/hook_fops.o src/hook_networks.o
 	HEADERS := $(PWD)/include
 	ccflags-y += -I$(HEADERS)
 
@@ -17,11 +17,10 @@ all: kernel client
 kernel:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
-client: mytool.ko
-	gcc -fPIC client.c $$(python$(python_version_major).$(python_version_minor)-config --cflags) $$(python$(python_version_major).$(python_version_minor)-config --ldflags) -o client
+client: detectiontool.ko
+	gcc -fPIC src/client.c $$(python$(python_version_major).$(python_version_minor)-config --cflags) $$(python$(python_version_major).$(python_version_minor)-config --ldflags) -o client
 endif
 
 clean:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
-	rm -rf *.ko *.mod.* *.o *.order *.symvers client 
-
+	rm -rf *.ko *.mod.* *.o *.order *.symvers client

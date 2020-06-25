@@ -1,4 +1,4 @@
-#include "detectiontool.h"
+#include "main.h"
 
 extern unsigned long *addr_syscall_table; /* Syscall Table */
 extern int (*core_kern_text)(unsigned long addr); /* Core Kernel Text */
