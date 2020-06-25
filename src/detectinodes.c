@@ -2,7 +2,7 @@
 //#include <python3.5m/Python.h> 
 #include <wchar.h>
 
-#define PYTHON_FILENAME "hidden-inode-detector.py"
+#define PYTHON_FILENAME "src/hidden-inode-detector.py"
 
 int hideinodedetector(const char* user_optarg, int user_optarg_size);
 

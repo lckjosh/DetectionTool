@@ -1,5 +1,8 @@
 ifneq ($(KERNELRELEASE),)
 	obj-m := detectiontool.o
+	detectiontool-objs := src/main.o src/hook_syscalls.o src/hook_fops.o src/hook_networks.o
+	HEADERS := $(PWD)/include
+	ccflags-y += -I$(HEADERS)
 
 else
 	KERNELDIR ?=/lib/modules/$(shell uname -r)/build
@@ -15,9 +18,9 @@ kernel:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 client: detectiontool.ko
-	gcc -fPIC client.c $$(python$(python_version_major).$(python_version_minor)-config --cflags) $$(python$(python_version_major).$(python_version_minor)-config --ldflags) -o client
+	gcc -fPIC src/client.c $$(python$(python_version_major).$(python_version_minor)-config --cflags) $$(python$(python_version_major).$(python_version_minor)-config --ldflags) -o client
 endif
 
 clean:
 	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
-	rm -rf *.ko *.mod.* *.o *.order *.symvers client 
+	rm -rf *.ko *.mod.* *.o *.order *.symvers client

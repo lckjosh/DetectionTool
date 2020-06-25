@@ -20,7 +20,7 @@ BASE_SCAN_FILE = "base-scan.txt"
 FALSE_POSITIVE_FILE = "false-positives.txt"
 CURRENT_SCAN_SET_FILE_PREFIX = "scan-set"
 NESTED_DIR_NAME = "HID-result" # files created by this script will be stored in this dir
-NESTED_DIR_PWD = os.path.dirname(os.path.realpath(__file__)) + "/" + NESTED_DIR_NAME + "/" 
+NESTED_DIR_PWD = NESTED_DIR_NAME + "/"
 
 Path(NESTED_DIR_PWD).mkdir(parents=True, exist_ok=True) # creates nested dir
 
