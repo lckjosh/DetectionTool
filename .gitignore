@@ -7,8 +7,10 @@ modules.order
 *.cmd
 *.mod
 client
+.cache.mk
 # for detecting hidden files & dirs
 HID-result
 base-scan.txt
 false-positives.txt
 scan-set*
+
