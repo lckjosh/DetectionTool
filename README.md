@@ -29,8 +29,8 @@ git clone https://github.com/lckjosh/DetectionTool.git
 cd DetectionTool
 make
 ```
-__NOTE: RUN `sudo ./client -f` upon installation to form initial baseline for detecting hidden inodes.__
-# Usage
+# Usage  
+__NOTE: RUN `sudo ./client -f` upon initial insertion of module to form initial baseline for detecting hidden inodes.__
 ```
 sudo insmod detectiontool.ko
 ./client [option]
