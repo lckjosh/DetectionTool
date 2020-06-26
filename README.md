@@ -1,5 +1,5 @@
 # Detection Tool
-This is a simple LKM rootkit detection tool for Linux.  
+This is a simple LKM rootkit detection tool for Linux 4.4+ on x86-64.
 
 For more detailed explanations, please visit the [wiki](https://github.com/lckjosh/DetectionTool/wiki).
 
