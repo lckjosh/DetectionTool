@@ -5,10 +5,8 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <math.h>
-
 #include <sys/stat.h>
 #include <getopt.h>
-#include <string.h>
 
 #include "detectpids.c"
 #include "detectinodes.c"
@@ -31,9 +29,9 @@
 
 #define BUF_SIZE 16
 
-#define usage_err_msg "[Usage] ./client [-p] [-f <filesystem-mounted-at-root-directory> ] [-s] [-m]\n\
+#define usage_err_msg "[Usage] ./client [-p] [-f partition-to-scan] [-s] [-m]\n\
 \t[-p] detect hidden PIDs\n\
-\t[-f <filesystem-mounted-at-root-directory> ] detect hidden files (./client -f /dev/sda1)\n\
+\t[-f partition-to-scan] detect hidden files (./client -f /dev/sda1)\n\
 \t[-s] detect hooked functions\n\
 \t[-m] detect hidden modules\n"
 

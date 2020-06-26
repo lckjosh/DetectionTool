@@ -104,7 +104,7 @@ static ssize_t tool_procfs_read(struct file *fp,
 		"Detection Tool Commands\n"
 		"#######################\n\n"
 		"\t* [-p] -->> to detect hidden PIDs on the system\n"
-		"\t* [-f] -->> to detect hidden files on the system\n"
+		"\t* [-f partition-to-scan] -->> to detect hidden files on the system\n"
 		"\t* [-s] -->> to detect hooked functions\n"
 		"\t* [-m] -->> to detect hidden modules\n"
 		"\x00";

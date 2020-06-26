@@ -10,6 +10,7 @@ int scan_fops(void)
     int no_of_fops_hooks = 0;
     char path[6];
 
+    // scan fops hooks
     printk(KERN_INFO "detection tool: Scanning fops of /, /proc and /sys...\n");
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 7, 0)
