@@ -23,12 +23,16 @@ char checker[10] = "ss";
 /* thx aramosf@unsec.net for the nice regexp! */
 
 // Linux
-char tcpcommand1[] = "netstat -tan | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
-char udpcommand1[] = "netstat -uan | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char tcp4command1[] = "netstat -t4an | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char tcp6command1[] = "netstat -t6an | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char udp4command1[] = "netstat -u4an | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char udp6command1[] = "netstat -u6an | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
 
 // Alternative commands, needs iproute2
-char tcpcommand2[] = "ss -tan sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
-char udpcommand2[] = "ss -uan sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char tcp4command2[] = "ss -t4an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char tcp6command2[] = "ss -t6an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char udp4command2[] = "ss -u4an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
+char udp6command2[] = "ss -u6an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
 
 /*
  *  Run a command to get more information about a port. 
@@ -92,7 +96,7 @@ void print_port(enum Proto proto, int port)
  * If not, report it and optionnally run lsof and/or fuser
  * to show more info.
  */
-int checkoneport(int port, char command[], enum Proto proto)
+int checkoneport(int port, char command[])
 {
     int ok = 0;
     char ports[30];
@@ -143,15 +147,15 @@ static void print_hidden_TCP_ports_1_by_1(enum Proto proto)
                 listen(socket_desc, 1);
                 if (EADDRINUSE == errno) // port is listened by another process
                 {
+                    // use ss
                     if (strcmp("ss", checker) == 0)
-                    {
-                        sprintf(tcpcommand, tcpcommand2, i);
-                    }
+                        sprintf(tcpcommand, tcp4command2, i);
+
+                    // use netstat
                     else
-                    {
-                        strncpy(tcpcommand, tcpcommand1, 512);
-                    }
-                    if (0 == checkoneport(i, tcpcommand, TCP))
+                        strncpy(tcpcommand, tcp4command1, 512);
+
+                    if (0 == checkoneport(i, tcpcommand))
                     {
                         // test again
                         listen(socket_desc, 1);
@@ -172,15 +176,15 @@ static void print_hidden_TCP_ports_1_by_1(enum Proto proto)
             {
                 if (EADDRINUSE == errno) //port is in use by another process
                 {
+                    // use ss
                     if (strcmp("ss", checker) == 0)
-                    {
-                        sprintf(tcpcommand, tcpcommand2, i);
-                    }
+                        sprintf(tcpcommand, tcp4command2, i);
+
+                    // use netstat
                     else
-                    {
-                        strncpy(tcpcommand, tcpcommand1, 512);
-                    }
-                    if (0 == checkoneport(i, tcpcommand, TCP))
+                        strncpy(tcpcommand, tcp4command1, 512);
+
+                    if (0 == checkoneport(i, tcpcommand))
                     {
                         // test again
                         if (-1 == bind(socket_desc, (struct sockaddr *)&address, sizeof(address)))
@@ -234,15 +238,170 @@ static void print_hidden_UDP_ports_1_by_1(enum Proto proto)
             {
                 if (EADDRINUSE == errno) //port is in use by another process
                 {
+                    // use ss
                     if (strcmp("ss", checker) == 0)
+                        sprintf(udpcommand, udp4command2, u);
+
+                    // use netstat
+                    else
+                        strncpy(udpcommand, udp4command1, 512);
+
+                    if (0 == checkoneport(u, udpcommand))
                     {
-                        sprintf(udpcommand, udpcommand2, u);
+                        // test again
+                        if (0 != bind(socket_desc, (struct sockaddr *)&address, sizeof(address))) // port is still in use by another process
+                        {
+                            if (EADDRINUSE == errno) //port is in use by another process
+                            {
+                                hidden_found = 1;
+                                print_port(proto, u);
+                            }
+                        }
+                    }
+                    close(socket_desc);
+                }
+                else // other error
+                {
+                    close(socket_desc);
+                    printf("Can't bind to socket while checking port %d", u);
+                }
+            }
+            else // port is available
+            {
+                close(socket_desc);
+            }
+        }
+        else
+        {
+            printf("Can't create socket while checking port %d/udp", u);
+        }
+    }
+}
+
+/*
+ * Check all TCP6 ports one by one.
+ */
+static void print_hidden_TCP6_ports_1_by_1(enum Proto proto)
+{
+    int i;
+    char tcpcommand[512];
+
+    for (i = 1; i <= 65535; i++)
+    {
+        int socket_desc;
+        struct sockaddr_in6 address;
+
+        if (-1 != (socket_desc = socket(AF_INET6, SOCK_STREAM, 0)))
+        {
+            address.sin6_family = AF_INET6;
+            address.sin6_addr = in6addr_any;
+            address.sin6_port = htons(i);
+            errno = 0;
+            if (-1 != bind(socket_desc, (struct sockaddr *)&address, sizeof(address)))
+            {
+                listen(socket_desc, 1);
+                if (EADDRINUSE == errno) // port is listened by another process
+                {
+                    // use ss
+                    if (strcmp("ss", checker) == 0)
+                        sprintf(tcpcommand, tcp6command2, i);
+
+                    // use netstat
+                    else
+                        strncpy(tcpcommand, tcp6command1, 512);
+
+                    if (0 == checkoneport(i, tcpcommand))
+                    {
+                        // test again
+                        listen(socket_desc, 1);
+                        if (EADDRINUSE == errno) // port is still listened by another process
+                        {
+                            hidden_found = 1;
+                            print_port(proto, i);
+                        }
+                    }
+                    close(socket_desc);
+                }
+                else
+                {
+                    close(socket_desc);
+                }
+            }
+            else
+            {
+                if (EADDRINUSE == errno) //port is in use by another process
+                {
+                    // use ss
+                    if (strcmp("ss", checker) == 0)
+                        sprintf(tcpcommand, tcp6command2, i);
+
+                    // use netstat
+                    else
+                        strncpy(tcpcommand, tcp6command1, 512);
+
+                    if (0 == checkoneport(i, tcpcommand))
+                    {
+                        // test again
+                        if (-1 == bind(socket_desc, (struct sockaddr *)&address, sizeof(address)))
+                        {
+                            if (EADDRINUSE == errno) // port is still used by another process
+                            {
+                                hidden_found = 1;
+                                print_port(proto, i);
+                            }
+                            else
+                            {
+                                printf("Can't bind to socket while checking port %d", i);
+                            }
+                            close(socket_desc);
+                        }
                     }
                     else
                     {
-                        strncpy(udpcommand, udpcommand1, 512);
-                    };
-                    if (0 == checkoneport(u, udpcommand, UDP))
+                        close(socket_desc);
+                    }
+                }
+            }
+        }
+        else
+        {
+            printf("Can't create socket while checking port %d/tcp", i);
+        }
+    }
+}
+
+/*
+ * Check all UDP6 ports one by one.
+ */
+static void print_hidden_UDP6_ports_1_by_1(enum Proto proto)
+{
+    int u;
+    char udpcommand[512];
+
+    for (u = 1; u <= 65535; u++)
+    {
+        int socket_desc;
+        struct sockaddr_in6 address;
+
+        if (-1 != (socket_desc = socket(AF_INET6, SOCK_DGRAM, 0)))
+        {
+            address.sin6_family = AF_INET6;
+            address.sin6_addr = in6addr_any;
+            address.sin6_port = htons(u);
+            errno = 0;
+            if (0 != bind(socket_desc, (struct sockaddr *)&address, sizeof(address)))
+            {
+                if (EADDRINUSE == errno) //port is in use by another process
+                {
+                    // use ss
+                    if (strcmp("ss", checker) == 0)
+                        sprintf(udpcommand, udp6command2, u);
+
+                    // use netstat
+                    else
+                        strncpy(udpcommand, udp6command1, 512);
+
+                    if (0 == checkoneport(u, udpcommand))
                     {
                         // test again
                         if (0 != bind(socket_desc, (struct sockaddr *)&address, sizeof(address))) // port is still in use by another process
@@ -276,20 +435,20 @@ static void print_hidden_UDP_ports_1_by_1(enum Proto proto)
 
 /*
  * Look for TCP and UDP ports that are hidden to netstat.
- *
- * Returns 0 if none is found, 1 if there is some internal error, 4 if TCP
- * hidden ports were found, 8 if UDP hidden ports were found or 12 (4 & 8) if
- * both were found.
  */
 void checknetworkports(void)
 {
     // using ss
     strncpy(checker, "ss", 10);
     print_hidden_TCP_ports_1_by_1(TCP);
+    print_hidden_TCP6_ports_1_by_1(TCP6);
     print_hidden_UDP_ports_1_by_1(UDP);
+    print_hidden_UDP6_ports_1_by_1(UDP6);
 
     //using netstat
     strncpy(checker, "netstat", 10);
     print_hidden_TCP_ports_1_by_1(TCP);
+    print_hidden_TCP6_ports_1_by_1(TCP6);
     print_hidden_UDP_ports_1_by_1(UDP);
+    print_hidden_UDP6_ports_1_by_1(UDP6);
 }
