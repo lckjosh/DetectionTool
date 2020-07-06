@@ -6,6 +6,7 @@ For more detailed explanations, please visit the [wiki](https://github.com/lckjo
 # Features
 - Detect Hidden PIDs
 - Detect Hidden Files
+- Detect Hidden Network Connections
 - Detect Hooked Functions
 - Detect Hidden Modules
 
@@ -38,12 +39,14 @@ sudo insmod detectiontool.ko
 Options:
 [-p] detect hidden PIDs (run with sudo)
 [-f partition-to-scan ] detect hidden files (run with sudo)
+[-n] detect hidden PIDs (run with sudo)
 [-s] detect hooked functions
 [-m] detect hidden modules
 
 Examples:
 ./client -p
 ./client -f /dev/sda1 
+./client -n
 ./client -s
 ./client -m 
 ```
