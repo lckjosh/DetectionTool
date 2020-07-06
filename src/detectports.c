@@ -65,29 +65,22 @@ char udp6command2[] = "ss -u6an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[
 /* Print a port, optionally querying info about it via lsof or fuser. */
 void print_port(enum Proto proto, int port)
 {
-    printf("Found Hidden port that not appear in %s: %i \n", checker, port);
-    // if (1 == use_fuser)
-    // {
-    //     if (TCP == proto)
-    //     {
-    //         print_info("fuser", fuserTCPcommand, port);
-    //     }
-    //     else
-    //     {
-    //         print_info("fuser", fuserUDPcommand, port);
-    //     }
-    // }
-    // if (1 == use_lsof)
-    // {
-    //     if (TCP == proto)
-    //     {
-    //         print_info("lsof", lsofTCPcommand, port);
-    //     }
-    //     else
-    //     {
-    //         print_info("lsof", lsofUDPcommand, port);
-    //     }
-    // }
+    if (TCP == proto)
+    {
+        printf("Found hidden TCP port that not appear in %s: %i \n", checker, port);
+    }
+    if (TCP6 == proto)
+    {
+        printf("Found hidden TCP6 port that not appear in %s: %i \n", checker, port);
+    }
+    if (UDP == proto)
+    {
+        printf("Found hidden UDP port that not appear in %s: %i \n", checker, port);
+    }
+    if (UDP6 == proto)
+    {
+        printf("Found hidden UDP6 port that not appear in %s: %i \n", checker, port);
+    }
 }
 
 /*
@@ -285,6 +278,7 @@ static void print_hidden_TCP6_ports_1_by_1(enum Proto proto)
 {
     int i;
     char tcpcommand[512];
+    int flag = 1; // turn on IPV6_V6ONLY flag to only check IPv6 sockets later because flag is off by recent kernel versions by default
 
     for (i = 1; i <= 65535; i++)
     {
@@ -296,6 +290,7 @@ static void print_hidden_TCP6_ports_1_by_1(enum Proto proto)
             address.sin6_family = AF_INET6;
             address.sin6_addr = in6addr_any;
             address.sin6_port = htons(i);
+            setsockopt(socket_desc, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&flag, sizeof(flag));
             errno = 0;
             if (-1 != bind(socket_desc, (struct sockaddr *)&address, sizeof(address)))
             {
@@ -377,6 +372,7 @@ static void print_hidden_UDP6_ports_1_by_1(enum Proto proto)
 {
     int u;
     char udpcommand[512];
+    int flag = 1; // turn on IPV6_V6ONLY flag to only check IPv6 sockets later because flag is off by recent kernel versions by default
 
     for (u = 1; u <= 65535; u++)
     {
@@ -388,6 +384,7 @@ static void print_hidden_UDP6_ports_1_by_1(enum Proto proto)
             address.sin6_family = AF_INET6;
             address.sin6_addr = in6addr_any;
             address.sin6_port = htons(u);
+            setsockopt(socket_desc, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&flag, sizeof(flag));
             errno = 0;
             if (0 != bind(socket_desc, (struct sockaddr *)&address, sizeof(address)))
             {
