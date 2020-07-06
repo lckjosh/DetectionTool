@@ -10,6 +10,7 @@
 
 #include "detectpids.c"
 #include "detectinodes.c"
+#include "detectports.c"
 
 // client program for detection tool
 // adapted from LilyOfTheValley rootkit
@@ -22,6 +23,7 @@
 
 #define DETECTPID_CMD "detectpid"
 #define DETECTINODE_CMD "detectinode"
+#define DETECTPORTS_CMD "detectports"
 #define DETECTHOOKS_CMD "detecthooks"
 #define DETECTMODULES_CMD "detectmods"
 
@@ -32,6 +34,7 @@
 #define usage_err_msg "[Usage] ./client [-p] [-f partition-to-scan] [-s] [-m]\n\
 \t[-p] detect hidden PIDs\n\
 \t[-f partition-to-scan] detect hidden files (./client -f /dev/sda1)\n\
+\t[-n] detect hidden network ports\n\
 \t[-s] detect hooked functions\n\
 \t[-m] detect hidden modules\n"
 
@@ -41,7 +44,13 @@ There may be a rootkit installed on your system that is hiding these processes.\
 #define hidden_proc_notfound_msg "There are no hidden processes found on your system.\n\
 A rootkit may still be present on your system but is not hiding any process at the moment.\n"
 
-#define OPTS_STR "pf:sm"
+#define hidden_port_found_msg "There are hidden ports found on your system.\n\
+There may be a rootkit installed on your system that is hiding these ports.\n"
+
+#define hidden_port_notfound_msg "There are no hidden ports found on your system.\n\
+A rootkit may still be present on your system but is not hiding any ports at the moment.\n"
+
+#define OPTS_STR "pf:nsm"
 
 #define __err(msg, prnt_func, err_code) \
    do                                   \
@@ -88,7 +97,7 @@ int main(int argc, char **argv)
             __err("[__ERROR_2__]", perror, -1);
          }
 
-         checkallquick();
+         checkpids();
 
          if (found_HP)
             printf(hidden_proc_found_msg);
@@ -116,6 +125,28 @@ int main(int argc, char **argv)
             printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
             break;
          }
+         break;
+      case 'n':
+         // detect hidden network ports
+         if (getuid() != 0)
+         {
+            printf("You must be root to perform this function!\n");
+            exit(1);
+         }
+         // Log to LKM
+         memset(cmd_buf, 0x0, BUF_SIZE);
+         sprintf(cmd_buf, DETECTPORTS_CMD);
+         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+         {
+            __err("[__ERROR_2__]", perror, -1);
+         }
+
+         checknetworkports();
+
+         if (hidden_found)
+            printf(hidden_port_found_msg);
+         else
+            printf(hidden_port_notfound_msg);
          break;
       case 's':
          // detect hooked functions

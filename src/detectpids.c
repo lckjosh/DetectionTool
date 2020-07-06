@@ -385,7 +385,7 @@ void printbadpid(int tmppid)
  *  Compare the various system calls against each other,
  *  and with fs function in /proc, finally check ps output
  */
-void checkallquick(void)
+void checkpids(void)
 {
 
    int ret;

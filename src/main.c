@@ -14,6 +14,7 @@ MODULE_AUTHOR("Joshua Lim, Fai Yew");
 // commands
 #define DETECTPID_CMD "detectpid"
 #define DETECTINODE_CMD "detectinode"
+#define DETECTPORTS_CMD "detectports"
 #define DETECTHOOKS_CMD "detecthooks"
 #define DETECTMODULES_CMD "detectmods"
 
@@ -72,6 +73,13 @@ static ssize_t tool_procfs_write(struct file *fp,
 	{
 		// detect hidden files (Userspace)
 		printk(KERN_INFO "detection tool: Detect hidden inode scan (-f) has been invoked by the user.\n");
+		memset(buf, 0x0, 16);
+	}
+
+	else if (strcmp(buf, DETECTPORTS_CMD) == 0)
+	{
+		// detect hidden network ports (Userspace)
+		printk(KERN_INFO "detection tool: Detect hidden network ports scan (-n) has been invoked by the user.\n");
 		memset(buf, 0x0, 16);
 	}
 
