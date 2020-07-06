@@ -1,5 +1,7 @@
 enum Proto
 {
        TCP = 0,
-       UDP = 1
+       TCP6 = 1,
+       UDP = 2,
+       UDP6 = 3
 };
