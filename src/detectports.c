@@ -67,19 +67,19 @@ void print_port(enum Proto proto, int port)
 {
     if (TCP == proto)
     {
-        printf("Found hidden TCP port that not appear in %s: %i \n", checker, port);
+        printf("Found hidden TCP port that does not appear in %s: %i \n", checker, port);
     }
     if (TCP6 == proto)
     {
-        printf("Found hidden TCP6 port that not appear in %s: %i \n", checker, port);
+        printf("Found hidden TCP6 port that does not appear in %s: %i \n", checker, port);
     }
     if (UDP == proto)
     {
-        printf("Found hidden UDP port that not appear in %s: %i \n", checker, port);
+        printf("Found hidden UDP port that does not appear in %s: %i \n", checker, port);
     }
     if (UDP6 == proto)
     {
-        printf("Found hidden UDP6 port that not appear in %s: %i \n", checker, port);
+        printf("Found hidden UDP6 port that does not appear in %s: %i \n", checker, port);
     }
 }
 
@@ -360,7 +360,7 @@ static void print_hidden_TCP6_ports_1_by_1(enum Proto proto)
         }
         else
         {
-            printf("Can't create socket while checking port %d/tcp", i);
+            printf("Can't create socket while checking port %d/tcp6", i);
         }
     }
 }
@@ -425,7 +425,7 @@ static void print_hidden_UDP6_ports_1_by_1(enum Proto proto)
         }
         else
         {
-            printf("Can't create socket while checking port %d/udp", u);
+            printf("Can't create socket while checking port %d/udp6", u);
         }
     }
 }
