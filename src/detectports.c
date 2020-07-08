@@ -34,52 +34,24 @@ char tcp6command2[] = "ss -t6an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[
 char udp4command2[] = "ss -u4an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
 char udp6command2[] = "ss -u6an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[\\.:]\\([0-9]*\\) .*[\\.:].*/\\1/'";
 
-/*
- *  Run a command to get more information about a port. 
- */
-// static void print_info(const char *prog_name, const char *command_fmt, int port)
-// {
-
-//     char buffer[1000];
-//     FILE *fp;
-
-//     sprintf(buffer, command_fmt, port);
-//     fp = popen(buffer, "r");
-
-//     if (NULL == fp)
-//     {
-//         printf("Couldn't run command: %s", buffer);
-//         return;
-//     }
-
-//     msgln(unlog, 1, "%s reports :", prog_name);
-
-//     while (NULL != fgets(buffer, 1000, fp))
-//     {
-//         msgln(unlog, 1, buffer);
-//     }
-
-//     pclose(fp);
-// }
-
-/* Print a port, optionally querying info about it via lsof or fuser. */
+/* Print a port*/
 void print_port(enum Proto proto, int port)
 {
     if (TCP == proto)
     {
-        printf("Found hidden TCP port that does not appear in %s: %i \n", checker, port);
+        printf("Possible hidden TCP port that does not appear in %s: %i \n", checker, port);
     }
     if (TCP6 == proto)
     {
-        printf("Found hidden TCP6 port that does not appear in %s: %i \n", checker, port);
+        printf("Possible hidden TCP6 port that does not appear in %s: %i \n", checker, port);
     }
     if (UDP == proto)
     {
-        printf("Found hidden UDP port that does not appear in %s: %i \n", checker, port);
+        printf("Possible hidden UDP port that does not appear in %s: %i \n", checker, port);
     }
     if (UDP6 == proto)
     {
-        printf("Found hidden UDP6 port that does not appear in %s: %i \n", checker, port);
+        printf("Possible hidden UDP6 port that does not appear in %s: %i \n", checker, port);
     }
 }
 
