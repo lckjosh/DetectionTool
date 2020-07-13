@@ -163,11 +163,18 @@ int main(int argc, char **argv)
                 __err("[__ERROR_2__]", perror, -1);
             // printf("Scanning for hooked functions. Run \"dmesg\" to view results.\n");
             dmesg_cmd_buf[0] = 0;
-            dmesg_cmd_tmp = popen(HOOKED_FUNCTION_OUTPUT_DMESG_CMD, "r");
-            while (NULL != fgets(dmesg_cmd_buf, 200, dmesg_cmd_tmp))
+            if (NULL != (dmesg_cmd_tmp = popen(HOOKED_FUNCTION_OUTPUT_DMESG_CMD, "r")))
             {
-                printf("%s", dmesg_cmd_buf);
-                dmesg_cmd_buf[0] = 0;
+                while (NULL != fgets(dmesg_cmd_buf, 200, dmesg_cmd_tmp))
+                {
+                    printf("%s", dmesg_cmd_buf);
+                    dmesg_cmd_buf[0] = 0;
+                }
+                pclose(dmesg_cmd_tmp);
+            }
+            else
+            {
+                printf("Error: client.c could not run dmesg command to view output, Run \'dmesg\' to view results");
             }
             break;
         case 'm':
@@ -178,11 +185,18 @@ int main(int argc, char **argv)
                 __err("[__ERROR_2__]", perror, -1);
             // printf("Scanning for hidden modules. Run \"dmesg\" to view results.\n");
             dmesg_cmd_buf[0] = 0;
-            dmesg_cmd_tmp = popen(HIDDEN_MODULE_OUTPUT_DMESG_CMD, "r");
-            while (NULL != fgets(dmesg_cmd_buf, 200, dmesg_cmd_tmp))
+            if (NULL != (dmesg_cmd_tmp = popen(HIDDEN_MODULE_OUTPUT_DMESG_CMD, "r")))
             {
-                printf("%s", dmesg_cmd_buf);
-                dmesg_cmd_buf[0] = 0;
+                while (NULL != fgets(dmesg_cmd_buf, 200, dmesg_cmd_tmp))
+                {
+                    printf("%s", dmesg_cmd_buf);
+                    dmesg_cmd_buf[0] = 0;
+                }
+                pclose(dmesg_cmd_tmp);
+            }
+            else
+            {
+                printf("Error: client.c could not run dmesg command to view output, Run \'dmesg\' to view results");
             }
 
             break;
