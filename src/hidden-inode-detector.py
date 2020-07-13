@@ -279,7 +279,6 @@ else:
             else:
                 if (false_positive_file_size != 0):
                     if (ffind_output in false_positive_set):
-                        print("reached here")
                         continue # ignore entry if inode pwd matches any entry in false-positive.txt
                 else:
                     final_hidden_inodes += 1
