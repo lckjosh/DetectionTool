@@ -50,7 +50,7 @@ There may be a rootkit installed on your system that is hiding these ports.\n"
 #define hidden_port_notfound_msg "There are no hidden ports found on your system.\n\
 A rootkit may still be present on your system but is not hiding any ports at the moment.\n"
 
-#define OPTS_STR "pf:nsm"
+#define OPTS_STR ":pf:nsmh"
 
 #define __err(msg, prnt_func, err_code) \
     do                                  \
@@ -187,9 +187,10 @@ int main(int argc, char **argv)
 
             break;
         case '?':
-            printf("unknown option: %c\n", optopt);
+            printf("unknown option: -%c\n", optopt);
             usage_err();
             break;
+        case 'h':
         case ':':
             usage_err();
         }
