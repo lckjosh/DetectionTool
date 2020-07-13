@@ -66,6 +66,9 @@ A rootkit may still be present on your system but is not hiding any ports at the
         return -1;             \
     } while (0)
 
+#define HOOKED_FUNCTION_OUTPUT_DMESG_CMD "dmesg | grep \"detection tool\" | awk -F\':\' \'{ print $2}\' | awk \'{if ($0 ~ /-s/) {chunk=\"\"} else {chunk=chunk $0 RS}} END {printf \"%s\", chunk}\' | sed \'s/^ *//g\'"
+#define HIDDEN_MODULE_OUTPUT_DMESG_CMD "dmesg | grep \"detection tool\" | awk -F\':\' \'{ print $2}\' | awk \'{if ($0 ~ /-m/) {chunk=\"\"} else {chunk=chunk $0 RS}} END {printf \"%s\", chunk}\' | sed \'s/^ *//g\'"
+
 int main(int argc, char **argv)
 {
     if (argc < 2)
@@ -73,6 +76,10 @@ int main(int argc, char **argv)
 
     char cmd_buf[BUF_SIZE];
     int opt, fd;
+
+    FILE *dmesg_cmd_tmp;
+    char dmesg_cmd_buf[200];
+
     fd = open(PROCFS_ENTRYNAME, O_RDWR);
 
     if (fd < 0)
@@ -154,7 +161,14 @@ int main(int argc, char **argv)
             sprintf(cmd_buf, DETECTHOOKS_CMD);
             if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
                 __err("[__ERROR_2__]", perror, -1);
-            printf("Scanning for hooked functions. Run \"dmesg\" to view results.\n");
+            // printf("Scanning for hooked functions. Run \"dmesg\" to view results.\n");
+            dmesg_cmd_buf[0] = 0;
+            dmesg_cmd_tmp = popen(HOOKED_FUNCTION_OUTPUT_DMESG_CMD, "r");
+            while (NULL != fgets(dmesg_cmd_buf, 200, dmesg_cmd_tmp))
+            {
+                printf("%s", dmesg_cmd_buf);
+                dmesg_cmd_buf[0] = 0;
+            }
             break;
         case 'm':
             // detect hidden modules
@@ -162,7 +176,15 @@ int main(int argc, char **argv)
             sprintf(cmd_buf, DETECTMODULES_CMD);
             if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
                 __err("[__ERROR_2__]", perror, -1);
-            printf("Scanning for hidden modules. Run \"dmesg\" to view results.\n");
+            // printf("Scanning for hidden modules. Run \"dmesg\" to view results.\n");
+            dmesg_cmd_buf[0] = 0;
+            dmesg_cmd_tmp = popen(HIDDEN_MODULE_OUTPUT_DMESG_CMD, "r");
+            while (NULL != fgets(dmesg_cmd_buf, 200, dmesg_cmd_tmp))
+            {
+                printf("%s", dmesg_cmd_buf);
+                dmesg_cmd_buf[0] = 0;
+            }
+
             break;
         case '?':
             printf("unknown option: %c\n", optopt);
