@@ -53,123 +53,123 @@ A rootkit may still be present on your system but is not hiding any ports at the
 #define OPTS_STR "pf:nsm"
 
 #define __err(msg, prnt_func, err_code) \
-   do                                   \
-   {                                    \
-      prnt_func(msg);                   \
-      return err_code;                  \
-   } while (0)
+    do                                  \
+    {                                   \
+        prnt_func(msg);                 \
+        return err_code;                \
+    } while (0)
 
-#define usage_err()          \
-   do                        \
-   {                         \
-      printf(usage_err_msg); \
-      return -1;             \
-   } while (0)
+#define usage_err()            \
+    do                         \
+    {                          \
+        printf(usage_err_msg); \
+        return -1;             \
+    } while (0)
 
 int main(int argc, char **argv)
 {
-   if (argc < 2)
-      usage_err();
+    if (argc < 2)
+        usage_err();
 
-   char cmd_buf[BUF_SIZE];
-   int opt, fd;
-   fd = open(PROCFS_ENTRYNAME, O_RDWR);
+    char cmd_buf[BUF_SIZE];
+    int opt, fd;
+    fd = open(PROCFS_ENTRYNAME, O_RDWR);
 
-   if (fd < 0)
-      __err("[__ERROR_1__]", perror, -1);
+    if (fd < 0)
+        __err("[__ERROR_1__]", perror, -1);
 
-   while ((opt = getopt(argc, argv, OPTS_STR)) != -1)
-   {
-      switch (opt)
-      {
-      case 'p':
-         // detect hidden processes
-         if (getuid() != 0)
-         {
-            printf("You must be root to perform this function!\n");
-            exit(1);
-         }
-         // Log to LKM
-         memset(cmd_buf, 0x0, BUF_SIZE);
-         sprintf(cmd_buf, DETECTPID_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
-         {
-            __err("[__ERROR_2__]", perror, -1);
-         }
+    while ((opt = getopt(argc, argv, OPTS_STR)) != -1)
+    {
+        switch (opt)
+        {
+        case 'p':
+            // detect hidden processes
+            if (getuid() != 0)
+            {
+                printf("You must be root to perform this function!\n");
+                exit(1);
+            }
+            // Log to LKM
+            memset(cmd_buf, 0x0, BUF_SIZE);
+            sprintf(cmd_buf, DETECTPID_CMD);
+            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+            {
+                __err("[__ERROR_2__]", perror, -1);
+            }
 
-         checkpids();
+            checkpids();
 
-         if (found_HP)
-            printf(hidden_proc_found_msg);
-         else
-            printf(hidden_proc_notfound_msg);
-         break;
-      case 'f':
-         // detect hidden inodes
-         if (getuid() != 0)
-         {
-            printf("You must be root to perform this function!\n");
-            exit(1);
-         }
-         // Log to LKM
-         memset(cmd_buf, 0x0, BUF_SIZE);
-         sprintf(cmd_buf, DETECTINODE_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
-         {
-            __err("[__ERROR_2__]", perror, -1);
-         }
-         // int status = system("./hidden-inode-detector.py /dev/sda1 / /");
-         int status = hideinodedetector(optarg, sizeof(optarg));
-         if (status != 0)
-         {
-            printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
+            if (found_HP)
+                printf(hidden_proc_found_msg);
+            else
+                printf(hidden_proc_notfound_msg);
             break;
-         }
-         break;
-      case 'n':
-         // detect hidden network ports
-         if (getuid() != 0)
-         {
-            printf("You must be root to perform this function!\n");
-            exit(1);
-         }
-         // Log to LKM
-         memset(cmd_buf, 0x0, BUF_SIZE);
-         sprintf(cmd_buf, DETECTPORTS_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
-         {
-            __err("[__ERROR_2__]", perror, -1);
-         }
+        case 'f':
+            // detect hidden inodes
+            if (getuid() != 0)
+            {
+                printf("You must be root to perform this function!\n");
+                exit(1);
+            }
+            // Log to LKM
+            memset(cmd_buf, 0x0, BUF_SIZE);
+            sprintf(cmd_buf, DETECTINODE_CMD);
+            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+            {
+                __err("[__ERROR_2__]", perror, -1);
+            }
+            // int status = system("./hidden-inode-detector.py /dev/sda1 / /");
+            int status = hideinodedetector(optarg, sizeof(optarg));
+            if (status != 0)
+            {
+                printf("client.c: Python script (hidden-inode-detector.py) failed to execute completely due to a raised exception.\n");
+                break;
+            }
+            break;
+        case 'n':
+            // detect hidden network ports
+            if (getuid() != 0)
+            {
+                printf("You must be root to perform this function!\n");
+                exit(1);
+            }
+            // Log to LKM
+            memset(cmd_buf, 0x0, BUF_SIZE);
+            sprintf(cmd_buf, DETECTPORTS_CMD);
+            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+            {
+                __err("[__ERROR_2__]", perror, -1);
+            }
 
-         checknetworkports();
+            checknetworkports();
 
-         if (hidden_found)
-            printf(hidden_port_found_msg);
-         else
-            printf(hidden_port_notfound_msg);
-         break;
-      case 's':
-         // detect hooked functions
-         memset(cmd_buf, 0x0, BUF_SIZE);
-         sprintf(cmd_buf, DETECTHOOKS_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
-            __err("[__ERROR_2__]", perror, -1);
-         printf("Scanning for hooked functions. Run \"dmesg\" to view results.\n");
-         break;
-      case 'm':
-         // detect hidden modules
-         memset(cmd_buf, 0x0, BUF_SIZE);
-         sprintf(cmd_buf, DETECTMODULES_CMD);
-         if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
-            __err("[__ERROR_2__]", perror, -1);
-         printf("Scanning for hidden modules. Run \"dmesg\" to view results.\n");
-         break;
-      case '?':
-         printf("unknown option: %c\n", optopt);
-         usage_err();
-         break;
-      case ':':
-         usage_err();
-      }
-   }
+            if (hidden_found)
+                printf(hidden_port_found_msg);
+            else
+                printf(hidden_port_notfound_msg);
+            break;
+        case 's':
+            // detect hooked functions
+            memset(cmd_buf, 0x0, BUF_SIZE);
+            sprintf(cmd_buf, DETECTHOOKS_CMD);
+            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+                __err("[__ERROR_2__]", perror, -1);
+            printf("Scanning for hooked functions. Run \"dmesg\" to view results.\n");
+            break;
+        case 'm':
+            // detect hidden modules
+            memset(cmd_buf, 0x0, BUF_SIZE);
+            sprintf(cmd_buf, DETECTMODULES_CMD);
+            if (write(fd, cmd_buf, strlen(cmd_buf)) < 0)
+                __err("[__ERROR_2__]", perror, -1);
+            printf("Scanning for hidden modules. Run \"dmesg\" to view results.\n");
+            break;
+        case '?':
+            printf("unknown option: %c\n", optopt);
+            usage_err();
+            break;
+        case ':':
+            usage_err();
+        }
+    }
 }

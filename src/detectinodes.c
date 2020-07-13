@@ -1,12 +1,13 @@
 #include <Python.h> // python-c API
-//#include <python3.5m/Python.h> 
+//#include <python3.5m/Python.h>
 #include <wchar.h>
 
 #define PYTHON_FILENAME "src/hidden-inode-detector.py"
 
-int hideinodedetector(const char* user_optarg, int user_optarg_size);
+int hideinodedetector(const char *user_optarg, int user_optarg_size);
 
-int hideinodedetector(const char* user_optarg, int user_optarg_size){
+int hideinodedetector(const char *user_optarg, int user_optarg_size)
+{
 
     int return_value = 0;
     int python_argc = 5;
@@ -14,12 +15,12 @@ int hideinodedetector(const char* user_optarg, int user_optarg_size){
     char str_new[user_optarg_size];
     strcpy(str_new, user_optarg);
     // printf("%s\n", str_new);
-    
-    const char* python_argv[] = {PYTHON_FILENAME, str_new, "/", "/", ""}; // python3 hidden-inode-detector.py /dev/sda1 / /
+
+    const char *python_argv[] = {PYTHON_FILENAME, str_new, "/", "/", ""}; // python3 hidden-inode-detector.py /dev/sda1 / /
 
     wchar_t arg0[100];
     mbstowcs(arg0, python_argv[0], 100); // Converts char* to wchar_t*
-    wchar_t arg1[100]; //PYTHON_FILENAME
+    wchar_t arg1[100];                   //PYTHON_FILENAME
     mbstowcs(arg1, python_argv[1], 100);
     wchar_t arg2[100];
     mbstowcs(arg2, python_argv[2], 100);
@@ -28,23 +29,25 @@ int hideinodedetector(const char* user_optarg, int user_optarg_size){
     wchar_t arg4[100];
     mbstowcs(arg4, python_argv[4], 100);
 
-    wchar_t* python_argv_converted[] = {arg0, arg1, arg2, arg3, arg4}; // used in PySys_SetArgv
-    
+    wchar_t *python_argv_converted[] = {arg0, arg1, arg2, arg3, arg4}; // used in PySys_SetArgv
+
     Py_SetProgramName(arg0);
-    FILE* fp;
+    FILE *fp;
     Py_Initialize();
 
     PySys_SetArgv(python_argc, python_argv_converted);
 
     fp = _Py_fopen(python_argv[0], "r");
-    if (fp == NULL){
+    if (fp == NULL)
+    {
         return_value = -1;
         printf("filedirdetector.c: Python FILE* object is not created\n");
         return return_value;
     }
 
     return_value = PyRun_SimpleFile(fp, python_argv[0]); // executes hidden-inode-detector.py
-    if (return_value < 0){
+    if (return_value < 0)
+    {
         printf("filedirdetector.c: Python script hidden-inode-detector.py has raised an exception. Hidden inode scan is incomplete.\n");
         return return_value;
     }
@@ -52,4 +55,3 @@ int hideinodedetector(const char* user_optarg, int user_optarg_size){
     Py_Finalize();
     return return_value;
 }
-
