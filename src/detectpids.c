@@ -1,8 +1,8 @@
 // Needed for unistd.h to declare getpgid() and others
-#define _XOPEN_SOURCE 500
+// #define _XOPEN_SOURCE 500
 
 // Needed for sched.h to declare sched_getaffinity()
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
 
 // Masks for the checks to do in checkps
 // =====================================
