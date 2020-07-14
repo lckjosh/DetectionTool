@@ -1,6 +1,12 @@
 #include "main.h"
 #include <net/net_namespace.h> /* init_net */
 
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(4,11,0)
+typedef struct refcount_struct {
+	atomic_t refs;
+} refcount_t;
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
 #include <linux/proc_fs.h>
 #else
@@ -10,6 +16,7 @@ typedef int (*proc_write_t)(struct file *, char *, size_t);
 struct proc_dir_entry
 {
     atomic_t in_use;
+    refcount_t refcnt;
     struct list_head pde_openers;
     spinlock_t pde_unload_lock;
     struct completion *pde_unload_completion;
