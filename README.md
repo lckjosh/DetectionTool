@@ -19,10 +19,20 @@ For more detailed explanations, please visit the [wiki](https://github.com/lckjo
 - Python 3
 - pytsk3 library
 
-For Debian-based distros: 
+For Debian-based distros (Ubuntu 16.04 & Ubuntu 18.04): 
 ```
-sudo apt install linux-headers-$(uname -r) build-essential sleuthkit python3 python3-pip python3-dev
+sudo apt install linux-headers-$(uname -r) build-essential git sleuthkit python3 python3-pip python3-dev
 pip3 install pytsk3
+```
+For RHEL-based distros (CentOS 8):
+```
+sudo dnf -y install epel-release
+sudo dnf config-manager --set-enabled PowerTools
+sudo dnf -y install make automake elfutils-libelf-devel gcc gcc-c++ git kernel-devel python3-devel
+wget --no-check-certificate "https://forensics.cert.org/cert-forensics-tools-release-el8.rpm"
+sudo dnf -y install cert-forensics-tools-release-el8.rpm
+sudo dnf -y install sleuthkit
+sudo pip3 install pytsk3
 ```
 ## Cloning and Compilation
 ```
