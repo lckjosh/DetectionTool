@@ -10,7 +10,6 @@ typedef int (*proc_write_t)(struct file *, char *, size_t);
 struct proc_dir_entry
 {
     atomic_t in_use;
-    refcount_t refcnt;
     struct list_head pde_openers;
     spinlock_t pde_unload_lock;
     struct completion *pde_unload_completion;
