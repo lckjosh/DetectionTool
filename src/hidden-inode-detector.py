@@ -12,9 +12,8 @@ from pathlib import Path
 try:
     import pytsk3
 except ImportError:
-    print(
-        "Error: pytsk3 is not installed. Install pytsk3 with [pip3 install pytsk3]")
-    sys.exit()
+    sys.exit(
+        "Error: Python pytsk3 module is not installed. Install pytsk3 with [pip3 install pytsk3]")
 
 # record estimated time for the script to be executed
 start_time = time.time()
@@ -28,9 +27,9 @@ FALSE_POSITIVE_FILE = "false-positives.txt"
 CURRENT_SCAN_SET_FILE_PREFIX = "scan-set"
 # files created by this script will be stored in this dir
 NESTED_DIR_NAME = "HID-result"
-NESTED_DIR_PWD = NESTED_DIR_NAME + "/"
-# Uncomment the following line for this python script to be executed from whichever directory the script is exectued, otherwise the script needs to be executed in the same directory as itself
+# Use the following line instead for this python script to be executed from whichever directory the script is exectued, otherwise the script needs to be executed in the same directory as itself
 # NESTED_DIR_PWD = os.path.dirname(os.path.realpath(__file__)) + "/" + NESTED_DIR_NAME + "/"
+NESTED_DIR_PWD = NESTED_DIR_NAME + "/"
 
 # creates nested directory for ./NESTED_DIR_NAME
 Path(NESTED_DIR_PWD).mkdir(parents=True, exist_ok=True)
@@ -97,17 +96,20 @@ def get_tsk_inodes(volume, root):
     try:
         # open the extX file system (e.g. /dev/sda1)
         img = pytsk3.Img_Info(volume)
-        # FS_Info used as a handle for more detailed file system analysis
-        fs = pytsk3.FS_Info(img)
+        # FS_Info used as a handle for more detailed file system analysis. Check if file system of volume is of extX
+        try:
+            fs = pytsk3.FS_Info(img)
+        except OSError as e:
+            print(e)
+            sys.exit("Error: file system of " + volume +
+                     " is not supported by hidden-inode-detector.py. Only ext2/ext3/ext4 file systems are supported.")
 
         # goes to tsk_walk_path(). root is /
         # first time scan to collect inodes in same (root) dir
         my_inodes, my_inodes_dir = tsk_walk_path(fs=fs, inode=root)
     except (OSError) as e:
         print(e)
-        print("Error: " + volume +
-              " is not a valid mount point or is not using ext2/3/4 file system. Current Hidden Files & Directories scan is terminated.")
-        sys.exit()
+        sys.exit("Error: " + volume + " is not a valid mount point")
     # This part tries to go through each dir found the first tsk_walk_path scan, and so on.
     seen = my_inodes_dir.copy()
     active = my_inodes_dir.copy()
@@ -166,12 +168,14 @@ def exception_error(error_message):
     print("Error: " + error_message)
     if os.path.isfile(current_scan):
         os.remove(current_scan)
-    print("Error: Current scan is terminated.")
-    print()
-    exit(1)
+    sys.exit("Error: Current scan is terminated.")
 
 # ==== Start =====
 
+
+# root check
+if not os.geteuid() == 0:
+    sys.exit("Error: This script must be run as root!")
 
 l = len(sys.argv)
 if l > 1:
@@ -195,11 +199,10 @@ os.system('/bin/echo 3 > /proc/sys/vm/drop_caches')
 
 print("===== Hidden Files & Directories Scan =====")
 
-# the main two tests
+# the main two tests (Takes around a minute)
 tsk_inodes = get_tsk_inodes(volume=volume, root=root)  # via read() syscall
-print("[*] Test tsk_inodes done [read() syscall]")  # At most 10 seconds
+print("[*] Test tsk_inodes done [read() syscall]")
 fs_inodes = get_fs_inodes(mount_path)  # via getdents() and stat() syscall
-# At most up to 60 seconds
 print("[*] Test fs_inodes done [getdents() & stat() syscall]")
 
 # current_set stores result of current scan (may contain many false positives)
@@ -216,11 +219,9 @@ if (TEST_PRINT):
 # The first base scan contains false positives, so we have to compare a second scan to the base scan to find anamolies between the scans.
 anomalies_set = set()
 
-
-# base scan, write current_set set of inodes in BASE_SCAN_FILE into basescan.txt line by line
+# first base scan, write current_set set of inodes in BASE_SCAN_FILE into basescan.txt line by line
 if not os.path.exists(NESTED_DIR_PWD + BASE_SCAN_FILE):
     print()
-    # print("Ensure that no user applications are running while initial hidden files & directory scan takes place")
     base_record = open(NESTED_DIR_PWD + BASE_SCAN_FILE, 'x')
     for i in current_set:
         base_record.write(str(i))
@@ -282,7 +283,7 @@ else:
         # print("contents of anomalies_set (possible hidden files): " + str(anomalies_set))
         print()
         if (additional_option != "hideinodepwd"):
-            print("list of possible hidden files: ")
+            print("list of possible hidden inodes: ")
         print()
 
         # Opens and reads the false-positive.txt file (into a false_positive_set) for entries which will be ignored.
