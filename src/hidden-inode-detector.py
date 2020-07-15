@@ -3,11 +3,18 @@
 import os
 import sys
 import time
-import pytsk3
 import resource
 import subprocess
 from datetime import datetime
 from pathlib import Path
+
+# Check if pytsk3 module is installed as it is required by the script
+try:
+    import pytsk3
+except ImportError:
+    print(
+        "Error: pytsk3 is not installed. Install pytsk3 with [pip3 install pytsk3]")
+    sys.exit()
 
 # record estimated time for the script to be executed
 start_time = time.time()
@@ -88,20 +95,19 @@ def tsk_walk_path(fs, inode, inodes=set(), inodes_dir=set(), counter=[0]):
 # Part 1 get_tsk_inodes
 def get_tsk_inodes(volume, root):
     try:
-        # open the file system (e.g. /dev/sda1)
+        # open the extX file system (e.g. /dev/sda1)
         img = pytsk3.Img_Info(volume)
         # FS_Info used as a handle for more detailed file system analysis
         fs = pytsk3.FS_Info(img)
+
         # goes to tsk_walk_path(). root is /
-        # first time scan to collect inodes in same dir
+        # first time scan to collect inodes in same (root) dir
         my_inodes, my_inodes_dir = tsk_walk_path(fs=fs, inode=root)
     except (OSError) as e:
         print(e)
         print("Error: " + volume +
-              " is not a valid mount point. Current hidden files & directorys scan is terminated.")
+              " is not a valid mount point or is not using ext2/3/4 file system. Current Hidden Files & Directories scan is terminated.")
         sys.exit()
-
-    # https://stackoverflow.com/questions/28584470/iterating-over-a-growing-set-in-python
     # This part tries to go through each dir found the first tsk_walk_path scan, and so on.
     seen = my_inodes_dir.copy()
     active = my_inodes_dir.copy()
@@ -134,7 +140,7 @@ def get_fs_inodes(path):
             abs_f = '%s/%s' % (d[0], f)
             try:
                 inodes.add(os.stat(abs_f).st_ino)
-            except OSError as e:
+            except OSError:
                 # Ignore dangling symlinks
                 if not os.path.islink(abs_f):
                     raise
@@ -156,6 +162,7 @@ def create_file_title(title):
 
 
 def exception_error(error_message):
+    # returns error message AND removes file created so far by current scan.
     print("Error: " + error_message)
     if os.path.isfile(current_scan):
         os.remove(current_scan)
@@ -190,10 +197,10 @@ print("===== Hidden Files & Directories Scan =====")
 
 # the main two tests
 tsk_inodes = get_tsk_inodes(volume=volume, root=root)  # via read() syscall
-print("- test tsk_inodes done [read() syscall]")  # At most 10 seconds
+print("[*] Test tsk_inodes done [read() syscall]")  # At most 10 seconds
 fs_inodes = get_fs_inodes(mount_path)  # via getdents() and stat() syscall
 # At most up to 60 seconds
-print("- test fs_inodes done [getdents() & stat() syscall]")
+print("[*] Test fs_inodes done [getdents() & stat() syscall]")
 
 # current_set stores result of current scan (may contain many false positives)
 # current_set is compared with base_set for anomalies for concurrent scans.
@@ -224,8 +231,11 @@ if not os.path.exists(NESTED_DIR_PWD + BASE_SCAN_FILE):
         # creates false-positive.txt for subsequent use
         open(NESTED_DIR_PWD + FALSE_POSITIVE_FILE, 'a').close()
 
-    print("Baseline set (base-scan.txt). Rename subsequent hidden files & directory scans (scan-*.txt) to base-scan.txt to replace baseline. Entries written to false-positives.txt will be ignored.")
-    print("===== Baseline Scan Finished ======")
+    print("[*] Baseline set (base-scan.txt). Do not modify the contents of the base-scan.txt file.")
+    print()
+    print("[*] You can optionally rename subsequent hidden files & directory scans (scan-*.txt) to base-scan.txt to replace baseline.")
+    print("[*] You can optionally include entries written to false-positives.txt, which will be ignored by the scan.")
+    print("===== Hidden Files & Directory Baseline Scan Finished ======")
 else:
     # subsequent scans (if the base scan is already done beforehand)
     # timestamp the prefix. scan file is not used in comparison currently, just to log.
@@ -235,7 +245,7 @@ else:
         current_record.write(str(i))
         current_record.write("\n")
 
-    print("Current hidden files & directory scan set is saved to: " +
+    print("[*] Current hidden files & directory scan set file is saved to: " +
           str(NESTED_DIR_PWD + current_scan))
     current_record.close()
 
@@ -294,7 +304,6 @@ else:
                       str(false_positive_set))
 
         for anomaly in anomalies_set:
-            # Execute Shell commands with python: https://janakiev.com/blog/python-shell-commands/
             # print out pwd of possible hidden files by using tsk's ffind command
             # ffind -u /dev/sda1 <inode-value>
             try:
@@ -302,7 +311,7 @@ else:
                     ['ffind', '-u', str(sys.argv[1]), str(anomaly)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             except FileNotFoundError:
                 exception_error(
-                    "The Seluth Kit (TSK) is not installed. Install TSK with [sudo apt install seluthkit].")
+                    "Error: The Seluth Kit (TSK) is not installed. Install TSK with [sudo apt install seluthkit | sudo dnf install seluthkit].")
             stdout, stderr = process.communicate()
             ffind_output = stdout.decode("utf-8").split('\n')[0]
             if (ffind_output == "File name not found for inode"):
@@ -323,18 +332,18 @@ else:
 
     if final_hidden_inodes:
         print()
-        print("Hidden Files & Directory Scan complete. There may be possible rootkit(s) installed on the system that are currently hiding " +
+        print("[WARNING] Hidden Files & Directory Scan complete. There may be possible rootkit(s) installed on the system that are currently hiding " +
               str(final_hidden_inodes) + " inode(s) [i.e. hidden files & directories].")
         print()
     else:
         # no inodes in anomalies_set
         print()
-        print("No hidden inodes found in list of possible hidden inodes.")
+        print("[*] No hidden inodes found in list of possible hidden inodes.")
         print()
-        print("No anomalies detected. No rootkit(s) are actively hiding inodes. ")
+        print("[*] No anomalies detected. No rootkit(s) are actively hiding inodes. ")
         print()
 
-    print("Hidden Files & Directory Scan took %s seconds" %
+    print("[*] Hidden Files & Directory Scan took %s seconds" %
           "{:.2f}".format((time.time() - start_time)))
     print()
     print("===== Hidden inode(s) Scan Finished =====")
