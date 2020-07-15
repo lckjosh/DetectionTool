@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 	obj-m := detectiontool.o
-	detectiontool-objs := src/main.o src/hook_syscalls.o src/hook_fops.o src/hook_networks.o
+	detectiontool-objs := src/main.o src/hook_syscalls.o src/hook_fops.o src/hook_networks.o src/detectmodules.o
 	HEADERS := $(PWD)/include
 	ccflags-y += -I$(HEADERS)
 

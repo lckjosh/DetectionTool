@@ -2,6 +2,7 @@
 #include "hook_syscalls.h"
 #include "hook_fops.h"
 #include "hook_networks.h"
+#include "detectmodules.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Joshua Lim, Fai Yew");
@@ -130,36 +131,7 @@ static void hook_detection(void)
 // detect hidden modules
 static void analyze_modules(void)
 {
-    struct kset *mod_kset;
-    struct kobject *cur, *tmp;
-    struct module_kobject *kobj;
-    int modulesFound = 0;
-
-    printk(KERN_INFO "detection tool: Scanning Modules...\n");
-
-    mod_kset = (void *)kallsyms_lookup_name("module_kset");
-    if (!mod_kset)
-        return;
-
-    list_for_each_entry_safe(cur, tmp, &mod_kset->list, entry)
-    {
-        if (!kobject_name(tmp))
-            break;
-
-        kobj = container_of(tmp, struct module_kobject, kobj);
-
-        if (kobj && kobj->mod && kobj->mod->name)
-        {
-            mutex_lock(&module_mutex);
-            if (!find_module(kobj->mod->name))
-            {
-                printk(KERN_ALERT "detection tool: Module [%s] hidden.\n", kobj->mod->name);
-                modulesFound++;
-            }
-            mutex_unlock(&module_mutex);
-        }
-    }
-
+    int modulesFound = scan_modules();
     if (modulesFound)
         printk(KERN_ALERT "detection tool: Scanning complete. A total of %d hidden modules on your system was detected.\n", modulesFound);
     else
