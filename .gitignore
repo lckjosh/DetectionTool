@@ -8,6 +8,7 @@ modules.order
 *.mod
 client
 .cache.mk
+.vscode
 # for detecting hidden files & dirs
 HID-result
 base-scan.txt
