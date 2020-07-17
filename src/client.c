@@ -201,11 +201,14 @@ int main(int argc, char **argv)
 
             break;
         case '?':
-            printf("unknown option: -%c\n", optopt);
+            printf("Error: Unknown option: -%c\n", optopt);
+            usage_err();
+            break;
+        case ':':
+            printf("Error: Option -%c requires an argument.\n", optopt);
             usage_err();
             break;
         case 'h':
-        case ':':
             usage_err();
         }
     }
