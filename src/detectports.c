@@ -20,6 +20,8 @@ int hidden_found = 0;
 // which checker to use
 char checker[10] = "ss";
 
+char output_buffer[200];
+
 /* thx aramosf@unsec.net for the nice regexp! */
 
 // Linux
@@ -37,21 +39,26 @@ char udp6command2[] = "ss -u6an sport = :%d | sed -e '/[\\.:][0-9]/!d' -e 's/.*[
 /* Print a port*/
 void print_port(enum Proto proto, int port)
 {
+    output_buffer[0] = 0; //Clear output buffer
     if (TCP == proto)
     {
-        printf("Possible hidden TCP port that does not appear in %s: %i \n", checker, port);
+        sprintf(output_buffer, "[WARNING] Possible hidden TCP port that does not appear in %s: %i \n", checker, port);
+        rk_warning_red_msg(output_buffer);
     }
     if (TCP6 == proto)
     {
-        printf("Possible hidden TCP6 port that does not appear in %s: %i \n", checker, port);
+        sprintf(output_buffer, "[WARNING] Possible hidden TCP6 port that does not appear in %s: %i \n", checker, port);
+        rk_warning_red_msg(output_buffer);
     }
     if (UDP == proto)
     {
-        printf("Possible hidden UDP port that does not appear in %s: %i \n", checker, port);
+        sprintf(output_buffer, "[WARNING] Possible hidden UDP port that does not appear in %s: %i \n", checker, port);
+        rk_warning_red_msg(output_buffer);
     }
     if (UDP6 == proto)
     {
-        printf("Possible hidden UDP6 port that does not appear in %s: %i \n", checker, port);
+        sprintf(output_buffer, "[WARNING] Possible hidden UDP6 port that does not appear in %s: %i \n", checker, port);
+        rk_warning_red_msg(output_buffer);
     }
 }
 
@@ -407,6 +414,7 @@ static void print_hidden_UDP6_ports_1_by_1(enum Proto proto)
  */
 void checknetworkports(void)
 {
+    printf("[*] Searching for ports hidden in netstat/ss command...\n");
     // using ss
     strncpy(checker, "ss", 10);
     print_hidden_TCP_ports_1_by_1(TCP);

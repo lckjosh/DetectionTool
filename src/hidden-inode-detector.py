@@ -197,13 +197,13 @@ os.system('/bin/sync')
 # this command free pagecache, frees up kernel memory
 os.system('/bin/echo 3 > /proc/sys/vm/drop_caches')
 
-print("===== Hidden Files & Directories Scan =====")
+print("[*] Searching for hidden files & directories hidden by a possible rootkit... ")
 
 # the main two tests (Takes around a minute)
 tsk_inodes = get_tsk_inodes(volume=volume, root=root)  # via read() syscall
-print("[*] Test tsk_inodes done [read() syscall]")
+print("[*] Hidden files & directory test tsk_inodes done [read() syscall]")
 fs_inodes = get_fs_inodes(mount_path)  # via getdents() and stat() syscall
-print("[*] Test fs_inodes done [getdents() & stat() syscall]")
+print("[*] Hidden files & directory test fs_inodes done [getdents() & stat() syscall]")
 
 # current_set stores result of current scan (may contain many false positives)
 # current_set is compared with base_set for anomalies for concurrent scans.
@@ -232,11 +232,16 @@ if not os.path.exists(NESTED_DIR_PWD + BASE_SCAN_FILE):
         # creates false-positive.txt for subsequent use
         open(NESTED_DIR_PWD + FALSE_POSITIVE_FILE, 'a').close()
 
-    print("[*] Baseline set (base-scan.txt). Do not modify the contents of the base-scan.txt file.")
+    print("\u001b[1m\u001b[32m[OK] Baseline successfully set \u001b[0m")
     print()
+    print("[*] Baseline set is stored in base-scan.txt). Do not modify the contents of the base-scan.txt file.")
     print("[*] You can optionally rename subsequent hidden files & directory scans (scan-*.txt) to base-scan.txt to replace baseline.")
     print("[*] You can optionally include entries written to false-positives.txt, which will be ignored by the scan.")
-    print("===== Hidden Files & Directory Baseline Scan Finished ======")
+    print("[*] Subsequent scans will be compared with this baseline.")
+    print()
+    print("[*] Baseline Scan finished in %s seconds" %
+          "{:.2f}".format((time.time() - start_time)))
+    # print("===== Hidden Files & Directory Baseline Scan Finished ======")
 else:
     # subsequent scans (if the base scan is already done beforehand)
     # timestamp the prefix. scan file is not used in comparison currently, just to log.
@@ -283,7 +288,7 @@ else:
         # print("contents of anomalies_set (possible hidden files): " + str(anomalies_set))
         print()
         if (additional_option != "hideinodepwd"):
-            print("list of possible hidden inodes: ")
+            print("[*] Searching through list of possible hidden inodes... ")
         print()
 
         # Opens and reads the false-positive.txt file (into a false_positive_set) for entries which will be ignored.
@@ -333,18 +338,20 @@ else:
 
     if final_hidden_inodes:
         print()
-        print("[WARNING] Hidden Files & Directory Scan complete. There may be possible rootkit(s) installed on the system that are currently hiding " +
-              str(final_hidden_inodes) + " inode(s) [i.e. hidden files & directories].")
+        print("\u001b[1m\u001b[31m[WARNING] Hidden Files & Directory Scan complete. There may be possible rootkit(s) installed on the system that are currently hiding " +
+              str(final_hidden_inodes) + " inode(s) [i.e. hidden files & directories].\u001b[0m")
         print()
     else:
         # no inodes in anomalies_set
         print()
-        print("[*] No hidden inodes found in list of possible hidden inodes.")
+        print(
+            "\u001b[1m\u001b[32m[OK] No hidden inodes found in list of possible hidden inodes. \u001b[0m")
         print()
-        print("[*] No anomalies detected. No rootkit(s) are actively hiding inodes. ")
+        print(
+            "\u001b[1m\u001b[32m[OK] No anomalies detected. No rootkit(s) are actively hiding inodes. \u001b[0m")
         print()
 
-    print("[*] Hidden Files & Directory Scan took %s seconds" %
+    print("[*] Hidden Files & Directory Scan finished in %s seconds" %
           "{:.2f}".format((time.time() - start_time)))
     print()
-    print("===== Hidden inode(s) Scan Finished =====")
+    # print("===== Hidden inode(s) Scan Finished =====")

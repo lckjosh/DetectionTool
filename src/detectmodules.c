@@ -12,7 +12,7 @@ int scan_modules(void)
     struct module_kobject *kobj;
     int found = 0;
 
-    printk(KERN_INFO "detection tool: Scanning Modules...\n");
+    printk(KERN_INFO "detection tool: [*] Scanning Modules...\n");
 
     mod_kset = (void *)kallsyms_lookup_name("module_kset");
     if (mod_kset)
@@ -29,7 +29,7 @@ int scan_modules(void)
                 mutex_lock(&module_mutex);
                 if (!find_module(kobj->mod->name))
                 {
-                    printk(KERN_ALERT "detection tool: Module [%s] hidden.\n", kobj->mod->name);
+                    printk(KERN_ALERT "detection tool: [WARNING] Module [%s] hidden.\n", kobj->mod->name);
                     found++;
                 }
                 mutex_unlock(&module_mutex);
