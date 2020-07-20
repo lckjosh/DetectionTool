@@ -228,6 +228,8 @@ int checkps(int tmppid, int checks)
  */
 void printbadpid(int tmppid)
 {
+    // Set text colour to red
+    printf("\x1b[1;31m");
 
     int statuscmd;
     char cmd[100];
@@ -237,7 +239,7 @@ void printbadpid(int tmppid)
     int cmdok = 0, cmdok2 = 0;
 
     found_HP = 1;
-    sprintf(fmtstart, "Found HIDDEN PID: %i", tmppid);
+    sprintf(fmtstart, "[WARNING] Found HIDDEN PID: %i", tmppid);
     printf("%s", fmtstart);
 
     sprintf(cmd, "/proc/%i/cmdline", tmppid);
@@ -378,6 +380,9 @@ void printbadpid(int tmppid)
             //      printf("Done !\n");
         }
     }
+
+    // Set text colour back to normal
+    printf("\x1b[1;32m");
     printf("\n");
 }
 
@@ -402,7 +407,7 @@ void checkpids(void)
     char curdir[PATH_MAX];
     DIR *dir_fd;
 
-    printf("Searching for hidden processes through the comparison of the results of system calls, proc, dir and ps\n");
+    printf("[*] Searching for hidden processes through the comparison of the results of system calls, proc, dir and ps...\n");
 
     // get the path where Unhide is ran from.
     if (NULL == (pathpt = getcwd(curdir, PATH_MAX)))

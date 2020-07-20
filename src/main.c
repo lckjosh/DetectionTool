@@ -35,8 +35,7 @@ static struct proc_dir_entry *tool_procfs_entry;
 // proc filesystem entry
 static struct file_operations tool_procfs_fops = {
     .write = tool_procfs_write,
-    .read = tool_procfs_read
-};
+    .read = tool_procfs_read};
 
 // create a proc filesystem entry for the detection tool
 static int tool_procfs_entry_init(void)
@@ -123,9 +122,9 @@ static void hook_detection(void)
     int hooked_functions = scan_sys_call_table() + scan_fops() + scan_networks();
     // print summary
     if (hooked_functions)
-        printk(KERN_ALERT "detection tool: Scanning complete. A total of %d hooked functions on your system was detected.\n", hooked_functions);
+        printk(KERN_ALERT "detection tool: [WARNING] Scanning complete. A total of %d hooked functions on your system was detected.\n", hooked_functions);
     else
-        printk(KERN_INFO "detection tool: Scanning complete. No hooked functions on your system were detected.\n");
+        printk(KERN_INFO "detection tool: [OK] Scanning complete. No hooked functions on your system were detected.\n");
 }
 
 // detect hidden modules
@@ -133,9 +132,9 @@ static void analyze_modules(void)
 {
     int modulesFound = scan_modules();
     if (modulesFound)
-        printk(KERN_ALERT "detection tool: Scanning complete. A total of %d hidden modules on your system was detected.\n", modulesFound);
+        printk(KERN_ALERT "detection tool: [WARNING] Scanning complete. A total of %d hidden modules on your system was detected.\n", modulesFound);
     else
-        printk(KERN_INFO "detection tool: Scanning complete. No hidden modules on your system were detected.\n");
+        printk(KERN_INFO "detection tool: [OK] Scanning complete. No hidden modules on your system were detected.\n");
 }
 
 static int tool_init(void)

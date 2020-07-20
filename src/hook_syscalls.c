@@ -14,7 +14,7 @@ int scan_sys_call_table(void)
     struct module *mod;
 
     // scan sys_call_table
-    printk(KERN_INFO "detection tool: Scanning sys_call_table...\n");
+    printk(KERN_INFO "detection tool: [*] Scanning sys_call_table...\n");
     for (sys_num = 0; sys_num < NR_syscalls; sys_num++)
     {
         addr = addr_syscall_table[sys_num];
@@ -24,16 +24,16 @@ int scan_sys_call_table(void)
             mod = get_module_from_addr(addr);
             if (mod)
             {
-                printk(KERN_ALERT "detection tool: syscall [%d] hook by module [%s] detected!\n", sys_num, mod->name);
+                printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by module [%s] detected!\n", sys_num, mod->name);
             }
             else
             {
                 mod_name = find_hidden_module_name(addr);
                 if (mod_name)
-                    printk(KERN_ALERT "detection tool: syscall [%d] hook by module [%s] detected!\n", sys_num, mod_name);
+                    printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by module [%s] detected!\n", sys_num, mod_name);
 
                 else
-                    printk(KERN_ALERT "detection tool: syscall [%d] hook by a hidden module detected!\n", sys_num);
+                    printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by a hidden module detected!\n", sys_num);
             }
             mutex_unlock(&module_mutex);
             no_of_syscall_hooks++;
@@ -48,16 +48,16 @@ int scan_sys_call_table(void)
                 mod = get_module_from_addr(addr);
                 if (mod)
                 {
-                    printk(KERN_ALERT "detection tool: syscall [%d] hook by module [%s] detected!\n", sys_num, mod->name);
+                    printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by module [%s] detected!\n", sys_num, mod->name);
                 }
                 else
                 {
                     mod_name = find_hidden_module_name(addr);
                     if (mod_name)
-                        printk(KERN_ALERT "detection tool: syscall [%d] hook by module [%s] detected!\n", sys_num, mod_name);
+                        printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by module [%s] detected!\n", sys_num, mod_name);
 
                     else
-                        printk(KERN_ALERT "detection tool: syscall [%d] hook by a hidden module detected!\n", sys_num);
+                        printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by a hidden module detected!\n", sys_num);
                 }
                 mutex_unlock(&module_mutex);
                 no_of_syscall_hooks++;
@@ -65,9 +65,9 @@ int scan_sys_call_table(void)
         }
     }
     if (no_of_syscall_hooks)
-        printk(KERN_ALERT "detection tool: %d hooked system calls detected!\n", no_of_syscall_hooks);
+        printk(KERN_ALERT "detection tool: [WARNING] %d hooked system calls detected!\n", no_of_syscall_hooks);
     else
-        printk(KERN_INFO "detection tool: No hooked system calls detected.\n");
+        printk(KERN_INFO "detection tool: [OK] No hooked system calls detected.\n");
 
     return no_of_syscall_hooks;
 }

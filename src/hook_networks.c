@@ -64,15 +64,15 @@ int scan_networks(void)
                 mod = get_module_from_addr(addr);
                 if (mod)
                 {
-                    printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", net[i].name, mod->name);
+                    printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod->name);
                 }
                 else
                 {
                     mod_name = find_hidden_module_name(addr);
                     if (mod_name)
-                        printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", net[i].name, mod_name);
+                        printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod_name);
                     else
-                        printk(KERN_ALERT "detection tool: [%s] function hook by a hidden module detected!\n", net[i].name);
+                        printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by a hidden module detected!\n", net[i].name);
                 }
                 mutex_unlock(&module_mutex);
                 no_of_net_hooks++;
@@ -86,15 +86,15 @@ int scan_networks(void)
                     mod = get_module_from_addr(addr);
                     if (mod)
                     {
-                        printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", net[i].name, mod->name);
+                        printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod->name);
                     }
                     else
                     {
                         mod_name = find_hidden_module_name(addr);
                         if (mod_name)
-                            printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", net[i].name, mod_name);
+                            printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod_name);
                         else
-                            printk(KERN_ALERT "detection tool: [%s] function hook by a hidden module detected!\n", net[i].name);
+                            printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by a hidden module detected!\n", net[i].name);
                     }
                     mutex_unlock(&module_mutex);
                     no_of_net_hooks++;
@@ -103,9 +103,9 @@ int scan_networks(void)
         }
     }
     if (no_of_net_hooks)
-        printk(KERN_ALERT "detection tool: %d hooked network functions detected!\n", no_of_net_hooks);
+        printk(KERN_ALERT "detection tool: [WARNING] %d hooked network functions detected!\n", no_of_net_hooks);
     else
-        printk(KERN_INFO "detection tool: No hooked network functions detected.\n");
+        printk(KERN_INFO "detection tool: [OK] No hooked network functions detected.\n");
 
     return no_of_net_hooks;
 }
@@ -124,71 +124,71 @@ int scan_networks(void)
     struct module *mod;
 
     // scan network hooks
-    printk(KERN_INFO "detection tool: Scanning for network function hooks...\n");
+    printk(KERN_INFO "detection tool: [*] Scanning for network function hooks...\n");
 
-#define SCAN_PROC_NET(NAME)                                                                                              \
-    sprintf(path, "/proc/net/%s", #NAME);                                                                                \
-    fp = filp_open(path, O_RDONLY, 0);                                                                                   \
-    if (IS_ERR(fp))                                                                                                      \
-        printk(KERN_ERR "detection tool: Failed to open %s!\n", path);                                                   \
-    if (IS_ERR(fp->f_path.dentry->d_inode))                                                                              \
-        printk(KERN_WARNING "detection tool: %s has no afinfo!\n", path);                                                \
-                                                                                                                         \
-    /* tcp */                                                                                                            \
-    if (!strncmp("tcp", #NAME, 3))                                                                                       \
-    {                                                                                                                    \
-        tcp_afinfo = PDE_DATA(fp->f_path.dentry->d_inode);                                                               \
-        addr = (unsigned long)tcp_afinfo->seq_ops.show;                                                                  \
-    }                                                                                                                    \
-    /* udp */                                                                                                            \
-    else                                                                                                                 \
-    {                                                                                                                    \
-        udp_afinfo = PDE_DATA(fp->f_path.dentry->d_inode);                                                               \
-        addr = (unsigned long)udp_afinfo->seq_ops.show;                                                                  \
-    }                                                                                                                    \
-                                                                                                                         \
-    if (!core_kern_text(addr))                                                                                           \
-    {                                                                                                                    \
-        mutex_lock(&module_mutex);                                                                                       \
-        mod = get_module_from_addr(addr);                                                                                \
-        if (mod)                                                                                                         \
-        {                                                                                                                \
-            printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", #NAME, mod->name);        \
-        }                                                                                                                \
-        else                                                                                                             \
-        {                                                                                                                \
-            mod_name = find_hidden_module_name(addr);                                                                    \
-            if (mod_name)                                                                                                \
-                printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", #NAME, mod_name);     \
-            else                                                                                                         \
-                printk(KERN_ALERT "detection tool: [%s] function hook by a hidden module detected!\n", #NAME);           \
-        }                                                                                                                \
-        mutex_unlock(&module_mutex);                                                                                     \
-        no_of_net_hooks++;                                                                                               \
-    }                                                                                                                    \
-    else                                                                                                                 \
-    {                                                                                                                    \
-        memcpy(test, (void *)addr, 12);                                                                                  \
-        if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)                                  \
-        {                                                                                                                \
-            mutex_lock(&module_mutex);                                                                                   \
-            mod = get_module_from_addr(addr);                                                                            \
-            if (mod)                                                                                                     \
-            {                                                                                                            \
-                printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", #NAME, mod->name);    \
-            }                                                                                                            \
-            else                                                                                                         \
-            {                                                                                                            \
-                mod_name = find_hidden_module_name(addr);                                                                \
-                if (mod_name)                                                                                            \
-                    printk(KERN_ALERT "detection tool: [%s] function hook by module [%s] detected!\n", #NAME, mod_name); \
-                else                                                                                                     \
-                    printk(KERN_ALERT "detection tool: [%s] function hook by a hidden module detected!\n", #NAME);       \
-            }                                                                                                            \
-            mutex_unlock(&module_mutex);                                                                                 \
-            no_of_net_hooks++;                                                                                           \
-        }                                                                                                                \
-    }                                                                                                                    \
+#define SCAN_PROC_NET(NAME)                                                                                                        \
+    sprintf(path, "/proc/net/%s", #NAME);                                                                                          \
+    fp = filp_open(path, O_RDONLY, 0);                                                                                             \
+    if (IS_ERR(fp))                                                                                                                \
+        printk(KERN_ERR "detection tool: [*] Failed to open %s!\n", path);                                                         \
+    if (IS_ERR(fp->f_path.dentry->d_inode))                                                                                        \
+        printk(KERN_WARNING "detection tool: [*] %s has no afinfo!\n", path);                                                      \
+                                                                                                                                   \
+    /* tcp */                                                                                                                      \
+    if (!strncmp("tcp", #NAME, 3))                                                                                                 \
+    {                                                                                                                              \
+        tcp_afinfo = PDE_DATA(fp->f_path.dentry->d_inode);                                                                         \
+        addr = (unsigned long)tcp_afinfo->seq_ops.show;                                                                            \
+    }                                                                                                                              \
+    /* udp */                                                                                                                      \
+    else                                                                                                                           \
+    {                                                                                                                              \
+        udp_afinfo = PDE_DATA(fp->f_path.dentry->d_inode);                                                                         \
+        addr = (unsigned long)udp_afinfo->seq_ops.show;                                                                            \
+    }                                                                                                                              \
+                                                                                                                                   \
+    if (!core_kern_text(addr))                                                                                                     \
+    {                                                                                                                              \
+        mutex_lock(&module_mutex);                                                                                                 \
+        mod = get_module_from_addr(addr);                                                                                          \
+        if (mod)                                                                                                                   \
+        {                                                                                                                          \
+            printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", #NAME, mod->name);        \
+        }                                                                                                                          \
+        else                                                                                                                       \
+        {                                                                                                                          \
+            mod_name = find_hidden_module_name(addr);                                                                              \
+            if (mod_name)                                                                                                          \
+                printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", #NAME, mod_name);     \
+            else                                                                                                                   \
+                printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by a hidden module detected!\n", #NAME);           \
+        }                                                                                                                          \
+        mutex_unlock(&module_mutex);                                                                                               \
+        no_of_net_hooks++;                                                                                                         \
+    }                                                                                                                              \
+    else                                                                                                                           \
+    {                                                                                                                              \
+        memcpy(test, (void *)addr, 12);                                                                                            \
+        if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)                                            \
+        {                                                                                                                          \
+            mutex_lock(&module_mutex);                                                                                             \
+            mod = get_module_from_addr(addr);                                                                                      \
+            if (mod)                                                                                                               \
+            {                                                                                                                      \
+                printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", #NAME, mod->name);    \
+            }                                                                                                                      \
+            else                                                                                                                   \
+            {                                                                                                                      \
+                mod_name = find_hidden_module_name(addr);                                                                          \
+                if (mod_name)                                                                                                      \
+                    printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", #NAME, mod_name); \
+                else                                                                                                               \
+                    printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by a hidden module detected!\n", #NAME);       \
+            }                                                                                                                      \
+            mutex_unlock(&module_mutex);                                                                                           \
+            no_of_net_hooks++;                                                                                                     \
+        }                                                                                                                          \
+    }                                                                                                                              \
     filp_close(fp, 0);
 
     SCAN_PROC_NET(tcp)
@@ -197,9 +197,9 @@ int scan_networks(void)
     SCAN_PROC_NET(udp6)
 
     if (no_of_net_hooks)
-        printk(KERN_ALERT "detection tool: %d hooked network functions detected!\n", no_of_net_hooks);
+        printk(KERN_ALERT "detection tool: [WARNING] %d hooked network functions detected!\n", no_of_net_hooks);
     else
-        printk(KERN_INFO "detection tool: No hooked network functions detected.\n");
+        printk(KERN_INFO "detection tool: [OK] No hooked network functions detected.\n");
 
     return no_of_net_hooks;
 }
