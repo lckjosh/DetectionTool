@@ -28,7 +28,7 @@ For RHEL-based distros (CentOS 8):
 ```
 sudo dnf -y install epel-release
 sudo dnf config-manager --set-enabled PowerTools
-sudo dnf -y install make automake elfutils-libelf-devel gcc gcc-c++ git kernel-devel python3-devel
+sudo dnf -y install make automake elfutils-libelf-devel gcc gcc-c++ git kernel-devel-$(uname -r) python3-devel
 wget --no-check-certificate "https://forensics.cert.org/cert-forensics-tools-release-el8.rpm"
 sudo dnf -y install cert-forensics-tools-release-el8.rpm
 sudo dnf -y install sleuthkit
