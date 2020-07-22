@@ -328,10 +328,9 @@ else:
             if (ffind_output == "File name not found for inode"):
                 continue  # ignore recently deleted entries that begins with with '*'
             else:
-                if (false_positive_file_size != 0):
-                    if (ffind_output in false_positive_set):
-                        # ignore entry if inode pwd matches any entry in false-positive.txt
-                        continue
+                if ((false_positive_file_size != 0) and (ffind_output in false_positive_set)):
+                    # ignore entry if inode pwd matches any entry in false-positive.txt
+                    continue
                 else:
                     final_hidden_inodes += 1
                     os_cmd_output = ffind_output + "  (" + str(anomaly) + ")"
