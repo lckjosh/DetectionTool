@@ -197,13 +197,18 @@ os.system('/bin/sync')
 # this command free pagecache, frees up kernel memory
 os.system('/bin/echo 3 > /proc/sys/vm/drop_caches')
 
-print("[*] Searching for hidden files & directories hidden by a possible rootkit... ")
+if os.path.exists(NESTED_DIR_PWD + BASE_SCAN_FILE):
+    print("[*] === Started Hidden Files & Directories scan to search for inodes that may be hidden by a possible rootkit ===")
+else:
+    print("[*] Creating baseline for root directory on " + volume + " ...")
 
 # the main two tests (Takes around a minute)
+print("[*] Evaluating disk view of file system via read() syscall... [get_tsk_inode test]")
 tsk_inodes = get_tsk_inodes(volume=volume, root=root)  # via read() syscall
-print("[*] Hidden files & directory test tsk_inodes done [read() syscall]")
+print("[*] Evaluation of disk view of file system done")
+print("[*] Evaluating user view of mounted file system via stat(), getdent(), etc... [get_fs_inodes test]")
 fs_inodes = get_fs_inodes(mount_path)  # via getdents() and stat() syscall
-print("[*] Hidden files & directory test fs_inodes done [getdents() & stat() syscall]")
+print("[*] Evaluation of user view of mounted file system done")
 
 # current_set stores result of current scan (may contain many false positives)
 # current_set is compared with base_set for anomalies for concurrent scans.
@@ -234,7 +239,7 @@ if not os.path.exists(NESTED_DIR_PWD + BASE_SCAN_FILE):
 
     print("\u001b[1m\u001b[32m[OK] Baseline successfully set \u001b[0m")
     print()
-    print("[*] Baseline set is stored in base-scan.txt). Do not modify the contents of the base-scan.txt file.")
+    print("[*] Baseline set is stored in (HID_result/base-scan.txt). Do not modify the contents of the base-scan.txt file.")
     print("[*] You can optionally rename subsequent hidden files & directory scans (scan-*.txt) to base-scan.txt to replace baseline.")
     print("[*] You can optionally include entries written to false-positives.txt, which will be ignored by the scan.")
     print("[*] Subsequent scans will be compared with this baseline.")
@@ -334,7 +339,8 @@ else:
                         # if "hideinodepwd" argument is entered, which hides the output of the hidden inode pwd and number.
                         continue
                     elif (additional_option == ""):
-                        print(os_cmd_output)
+                        print(
+                            "\u001b[1m\u001b[31m[WARNING] Found hidden inode:  " + os_cmd_output + "\u001b[0m")
 
     if final_hidden_inodes:
         print()
@@ -351,7 +357,7 @@ else:
             "\u001b[1m\u001b[32m[OK] No anomalies detected. No rootkit(s) are actively hiding inodes. \u001b[0m")
         print()
 
-    print("[*] Hidden Files & Directory Scan finished in %s seconds" %
+    print("[*] === Hidden Files & Directory Scan finished in %s seconds ===" %
           "{:.2f}".format((time.time() - start_time)))
     print()
     # print("===== Hidden inode(s) Scan Finished =====")
