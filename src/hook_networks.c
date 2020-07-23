@@ -80,7 +80,7 @@ int scan_networks(void)
             else
             {
                 memcpy(test, (void *)addr, 12);
-                if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)
+                if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc)
                 {
                     mutex_lock(&module_mutex);
                     mod = get_module_from_addr(addr);
@@ -169,7 +169,7 @@ int scan_networks(void)
     else                                                                                                                           \
     {                                                                                                                              \
         memcpy(test, (void *)addr, 12);                                                                                            \
-        if (test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0)                                            \
+        if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc)    \
         {                                                                                                                          \
             mutex_lock(&module_mutex);                                                                                             \
             mod = get_module_from_addr(addr);                                                                                      \
