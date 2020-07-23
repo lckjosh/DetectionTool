@@ -322,7 +322,7 @@ else:
                     ['ffind', '-u', str(sys.argv[1]), str(anomaly)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             except FileNotFoundError:
                 exception_error(
-                    "Error: The Seluth Kit (TSK) is not installed. Install TSK with [sudo apt install seluthkit | sudo dnf install seluthkit].")
+                    "Error: The Sleuth Kit (TSK) is not installed. Install TSK with [sudo apt install sleuthkit | sudo dnf install sleuthkit].")
             stdout, stderr = process.communicate()
             ffind_output = stdout.decode("utf-8").split('\n')[0]
             if (ffind_output == "File name not found for inode"):
