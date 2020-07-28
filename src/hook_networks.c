@@ -5,13 +5,11 @@
 extern int (*core_kern_text)(unsigned long addr); /* Core Kernel Text */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 18, 0)
-struct net_entry net[6] = {
+struct net_entry net[4] = {
     {"tcp", NULL},
     {"tcp6", NULL},
     {"udp", NULL},
-    {"udp6", NULL},
-    {"udplite", NULL},
-    {"udplite6", NULL}};
+    {"udp6", NULL}};
 
 struct proc_dir_entry *find_subdir(struct rb_root *tree, const char *str)
 {
@@ -31,34 +29,46 @@ struct proc_dir_entry *find_subdir(struct rb_root *tree, const char *str)
 
 int scan_networks(void)
 {
-    int i, j;
-    unsigned long op_addr[4];
+    int i;
     unsigned long addr;
     unsigned char test[12];
     const struct seq_operations *seq_ops;
-    const struct file_operations *seq_fops;
     int no_of_net_hooks = 0;
     const char *mod_name;
     struct module *mod;
 
-    for (i = 0; i < 6; i++)
+    for (i = 0; i < 4; i++)
     {
         net[i].entry = find_subdir(&init_net.proc_net->subdir, net[i].name);
         if (!net[i].entry)
             continue;
 
         seq_ops = net[i].entry->seq_ops;
-        seq_fops = net[i].entry->proc_fops;
+        addr = (unsigned long)seq_ops->show;
 
-        op_addr[0] = (unsigned long)seq_fops->llseek;
-        op_addr[1] = (unsigned long)seq_fops->read;
-        op_addr[2] = (unsigned long)seq_fops->release;
-        op_addr[3] = (unsigned long)seq_ops->show;
-
-        for (j = 0; j < 4; j++)
+        if (!core_kern_text(addr))
         {
-            addr = op_addr[j];
-            if (!core_kern_text(addr))
+            mutex_lock(&module_mutex);
+            mod = get_module_from_addr(addr);
+            if (mod)
+            {
+                printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod->name);
+            }
+            else
+            {
+                mod_name = find_hidden_module_name(addr);
+                if (mod_name)
+                    printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod_name);
+                else
+                    printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by a hidden module detected!\n", net[i].name);
+            }
+            mutex_unlock(&module_mutex);
+            no_of_net_hooks++;
+        }
+        else
+        {
+            memcpy(test, (void *)addr, 12);
+            if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc)
             {
                 mutex_lock(&module_mutex);
                 mod = get_module_from_addr(addr);
@@ -76,29 +86,6 @@ int scan_networks(void)
                 }
                 mutex_unlock(&module_mutex);
                 no_of_net_hooks++;
-            }
-            else
-            {
-                memcpy(test, (void *)addr, 12);
-                if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc)
-                {
-                    mutex_lock(&module_mutex);
-                    mod = get_module_from_addr(addr);
-                    if (mod)
-                    {
-                        printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod->name);
-                    }
-                    else
-                    {
-                        mod_name = find_hidden_module_name(addr);
-                        if (mod_name)
-                            printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by module [%s] detected!\n", net[i].name, mod_name);
-                        else
-                            printk(KERN_ALERT "detection tool: [WARNING] [%s] function hook by a hidden module detected!\n", net[i].name);
-                    }
-                    mutex_unlock(&module_mutex);
-                    no_of_net_hooks++;
-                }
             }
         }
     }
