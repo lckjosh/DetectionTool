@@ -50,21 +50,7 @@ int scan_fops(void)
         memcpy(test, (void *)addr, 12);                                                                                         \
         if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc) \
         {                                                                                                                       \
-            mutex_lock(&module_mutex);                                                                                          \
-            mod = get_module_from_addr(addr);                                                                                   \
-            if (mod)                                                                                                            \
-            {                                                                                                                   \
-                printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by module [%s] detected!\n", path, mod->name);      \
-            }                                                                                                                   \
-            else                                                                                                                \
-            {                                                                                                                   \
-                mod_name = find_hidden_module_name(addr);                                                                       \
-                if (mod_name)                                                                                                   \
-                    printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by module [%s] detected!\n", path, mod_name);   \
-                else                                                                                                            \
-                    printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by a hidden module detected!\n", path);         \
-            }                                                                                                                   \
-            mutex_unlock(&module_mutex);                                                                                        \
+            printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by a kernel module detected!\n", path);                 \
             no_of_fops_hooks++;                                                                                                 \
         }                                                                                                                       \
     }                                                                                                                           \
@@ -103,21 +89,7 @@ int scan_fops(void)
         memcpy(test, (void *)addr, 12);                                                                                         \
         if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc) \
         {                                                                                                                       \
-            mutex_lock(&module_mutex);                                                                                          \
-            mod = get_module_from_addr(addr);                                                                                   \
-            if (mod)                                                                                                            \
-            {                                                                                                                   \
-                printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by module [%s] detected!\n", path, mod->name);      \
-            }                                                                                                                   \
-            else                                                                                                                \
-            {                                                                                                                   \
-                mod_name = find_hidden_module_name(addr);                                                                       \
-                if (mod_name)                                                                                                   \
-                    printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by module [%s] detected!\n", path, mod_name);   \
-                else                                                                                                            \
-                    printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by a hidden module detected!\n", path);         \
-            }                                                                                                                   \
-            mutex_unlock(&module_mutex);                                                                                        \
+            printk(KERN_ALERT "detection tool: [WARNING] [%s] fops hook by a kernel module detected!\n", path);                 \
             no_of_fops_hooks++;                                                                                                 \
         }                                                                                                                       \
     }                                                                                                                           \

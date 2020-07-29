@@ -44,22 +44,7 @@ int scan_sys_call_table(void)
             memcpy(test, (void *)addr, 12);
             if ((test[0] == 0x48 && test[1] == 0xb8 && test[10] == 0xff && test[11] == 0xe0) || test[0] == 0xe9 || test[0] == 0xcc)
             {
-                mutex_lock(&module_mutex);
-                mod = get_module_from_addr(addr);
-                if (mod)
-                {
-                    printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by module [%s] detected!\n", sys_num, mod->name);
-                }
-                else
-                {
-                    mod_name = find_hidden_module_name(addr);
-                    if (mod_name)
-                        printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by module [%s] detected!\n", sys_num, mod_name);
-
-                    else
-                        printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by a hidden module detected!\n", sys_num);
-                }
-                mutex_unlock(&module_mutex);
+                printk(KERN_ALERT "detection tool: [WARNING] syscall [%d] hook by a kernel module detected!\n", sys_num);
                 no_of_syscall_hooks++;
             }
         }
